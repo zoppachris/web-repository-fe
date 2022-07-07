@@ -1,62 +1,121 @@
-import { Popconfirm, Table } from "antd";
+import { notification, Popconfirm, Table } from "antd";
 import Search from "antd/lib/input/Search";
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API } from "../../../Services/axios";
 
 export default function DosenPage() {
   const navigate = useNavigate();
+  const initialParams = {
+    size: 20,
+    page: 0,
+    sort: "",
+    search: "",
+    id: "",
+    fakultas: "",
+  };
+  const [dataLectures, setDataLectures] = useState([]);
+  const [loadingTable, setLoadingTable] = useState(false);
+  const [params, setParams] = useState(initialParams);
+  const [meta, setMeta] = useState({ size: 20, page: 1, total: 0 });
 
-  const dataSource = [
-    {
-      key: "1",
-      dosenId: "1",
-      nidn: "8809840017",
-      namaDosen: "Dr. Drs. H. Aji Komarudin, M.Si.",
-    },
-    {
-      key: "2",
-      dosenId: "2",
-      nidn: "0405078004",
-      namaDosen: "Yuniati Fransisca, S.E., M.M.",
-    },
-  ];
+  const getLecture = useCallback(async () => {
+    setLoadingTable(true);
+    await API(`lecture.getLecture`, {
+      params,
+    })
+      .then((res) => {
+        setLoadingTable(false);
+        if (res.status === 200 && res.data.status === "success") {
+          const { data } = res.data;
+          const newData = data?.content.map((item, index) => {
+            return { key: index, ...item };
+          });
+          setDataLectures(newData);
+          setMeta({
+            size: data?.size,
+            page: data?.page + 1,
+            total: data?.totalElements,
+          });
+        }
+      })
+      .catch((res) => {
+        setLoadingTable(false);
+        notification.info({
+          message: "Gagal mendapatkan data",
+          description: "Data dosen gagal didapatkan!",
+        });
+      });
+  }, [params]);
+
+  const deleteLecture = async (id) => {
+    await API(`lecture.deleteLecture`, { query: { id } })
+      .then((res) => {
+        setParams(initialParams);
+        if (res.status === 200 && res.data.status === "success") {
+          notification.success({
+            message: "Berhasil menghapus data",
+            description: "Data dosen berhasil dihapus!",
+          });
+        } else {
+          notification.info({
+            message: "Gagal menghapus data",
+            description: "Data dosen gagal dihapus!",
+          });
+        }
+      })
+      .catch((res) => {
+        notification.error({
+          message: "Gagal menghapus data",
+          description: "Data dosen gagal dihapus!",
+        });
+      });
+  };
+
+  useEffect(() => {
+    getLecture();
+  }, [getLecture]);
 
   const columns = [
     {
       title: "NIDN",
       dataIndex: "nidn",
       key: "nidn",
-      width: 600,
     },
     {
       title: "Nama Dosen",
-      dataIndex: "namaDosen",
-      key: "namaDosen",
-      width: 600,
+      dataIndex: "lectureName",
+      key: "lectureName",
     },
     {
-      title: "Action",
+      title: "Status",
+      dataIndex: "users",
+      key: "users.status",
+      render: (text) => (text.status ? "Aktif" : "Tidak Aktif"),
+    },
+    {
+      title: "Aksi",
       dataIndex: "",
       render: (record) => (
         <div className="text-primary1 md:flex-row flex-col flex gap-4 text-sm font-semibold">
           <div
             className="cursor-pointer hover:opacity-80"
-            onClick={() => handleRow("Detail", record.dosenId)}
+            onClick={() => handleRow("Detail", record.lectureId)}
           >
             Detail
           </div>
           <div
             className="cursor-pointer hover:opacity-80"
-            onClick={() => handleRow("Update", record.dosenId)}
+            onClick={() => handleRow("Update", record.lectureId)}
           >
-            Update
+            Edit
           </div>
           <Popconfirm
             title="Hapus data ini?"
             placement="left"
-            onConfirm={() => console.log(record.key)}
+            onConfirm={() => deleteLecture(record.lectureId)}
           >
-            <div className="cursor-pointer hover:opacity-80">Delete</div>
+            <div className="cursor-pointer hover:opacity-80">Hapus</div>
           </Popconfirm>
         </div>
       ),
@@ -64,17 +123,25 @@ export default function DosenPage() {
   ];
 
   const handleTable = (pagination, filter, sorter) => {
-    console.log("pagination: ", pagination);
+    setParams({
+      ...params,
+      page: pagination.current - 1,
+      size: pagination.pageSize,
+    });
+  };
+
+  const onSearch = (value) => {
+    setParams({
+      ...params,
+      page: 0,
+      search: value,
+    });
   };
 
   const handleRow = (type, id) => {
     navigate(`/dosen-form/${id}`, {
       state: { type: type },
     });
-  };
-
-  const onSearch = (value) => {
-    console.log("search", value);
   };
 
   return (
@@ -97,19 +164,21 @@ export default function DosenPage() {
               })
             }
           >
-            New Dosen
+            + Buat Dosen
           </div>
         </div>
       </div>
       <div className="md:mt-30 mt-5 w-full">
         <Table
-          dataSource={dataSource}
+          loading={loadingTable}
+          scroll={{ x: 724 }}
+          dataSource={dataLectures}
           columns={columns}
           onChange={handleTable}
           pagination={{
-            current: 1,
-            pageSize: 20,
-            total: 85,
+            current: meta.page,
+            pageSize: meta.size,
+            total: meta.total,
             responsive: true,
             pageSizeOptions: ["20", "50", "100"],
             showSizeChanger: true,

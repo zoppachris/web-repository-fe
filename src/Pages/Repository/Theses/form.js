@@ -10,23 +10,34 @@ import {
   Divider,
   Form,
   Input,
+  notification,
   PageHeader,
   Row,
   Select,
+  Spin,
   Upload,
 } from "antd";
 import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import moment from "moment";
+import _debounce from "lodash.debounce";
+import apiClient, { API } from "../../../Services/axios";
 
-export default function RepositoryFormPage() {
+export default function ThesesFormPage() {
   const navigate = useNavigate();
+  const { thesesId } = useParams();
   const [form] = Form.useForm();
   const { Option } = Select;
   const { TextArea } = Input;
   const { state } = useLocation();
-  const [urlSkripsi, setUrlSkripsi] = useState("");
-  const [urlSkripsiFull, setUrlSkripsiFull] = useState("");
+  const [loadingForm, setLoadingForm] = useState(false);
+  const [loadingStudent, setLoadingStudent] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState({});
+  const [dataStudents, setDataStudents] = useState([]);
+  const [thesesPartialUrl, setThesesPartialUrl] = useState("");
+  const [thesesFullUrl, setThesesFullUrl] = useState("");
+  const [thesesPartialPath, setThesesPartialPath] = useState("");
+  const [thesesFullPath, setThesesFullPath] = useState("");
   const [fileBase64, setFileBase64] = useState(null);
   const [fileFullBase64, setFileFullBase64] = useState(null);
   const [validationSkripsi, setValidationSkripsi] = useState({
@@ -38,54 +49,194 @@ export default function RepositoryFormPage() {
     status: "success",
   });
 
-  // useEffect(() => {
-  //   if (state?.type !== "Create") {
-  //     getMahasiswaDetail(state?.mahasiswaId);
-  //   }
-  // }, [state]);
+  useEffect(() => {
+    if (state?.type !== "Create" && thesesId) {
+      getThesesDetail();
+    }
+  }, []);
 
-  // const getMahasiswaDetail = (id) => {
-  //   console.log(id);
-  //   setUrlSkripsi(
-  //     "https://png.pngtree.com/element_our/png/20181022/man-avatar-icon-professional-man-character-business-man-avatar-carton-symbol-png_206531.jpg"
-  //   );
-  //   const setData = () => {
-  //     form.setFieldsValue({
-  //       nim: "55201118021",
-  //       namaMahasiswa: "Bagas Hermawan",
-  //       angkatan: moment("2017"),
-  //       password: "tes123",
-  //       status: 1,
-  //       jurusanId: "1",
-  //     });
-  //   };
-  //   setData();
-  // };
+  const getThesesDetail = async () => {
+    await API(`theses.getTheses`, {
+      params: {
+        size: "",
+        page: "",
+        sort: "",
+        search: "",
+        id: thesesId,
+        jurusan: "",
+        year: "",
+      },
+    })
+      .then((res) => {
+        if (res.status === 200 && res.data.status === "success") {
+          const { data } = res.data;
+          setThesesPartialPath(data?.partialDocumentPath);
+          setThesesFullPath(data?.fullDocumentPath);
+          setThesesPartialUrl(data?.partialDocumentUrl);
+          setThesesFullUrl(data?.fullDocumentUrl);
+          setDataStudents([data?.students]);
+          setSelectedStudent(data?.students);
+          const setData = () => {
+            form.setFieldsValue({
+              thesesTitle: data.thesesTitle,
+              abstracts: data.abstracts,
+              keywords: data.keywords,
+              studentId: data.students.studentId.toString(),
+              year: moment(data.year),
+              partialDocumentUrl: data.partialDocumentUrl,
+              fullDocumentUrl: data.fullDocumentUrl,
+            });
+          };
+          setData();
+        }
+      })
+      .catch((res) => {
+        notification.info({
+          message: "Gagal mendapatkan data",
+          description: "Data detail dosen gagal didapatkan!",
+        });
+      });
+  };
 
-  const dataMahasiswa = [
-    {
-      key: "1",
-      mahasiswaId: "1",
-      nim: "55201118021",
-      namaMahasiswa: "Bagas Hermawan",
-      namaJurusan: "Teknik Informatika",
-      angkatan: "2017",
-    },
-    {
-      key: "2",
-      mahasiswaId: "2",
-      nim: "55201118022",
-      namaMahasiswa: "Muhammad Aldi",
-      namaJurusan: "Manajemen Bisnis",
-      angkatan: "2017",
-    },
-  ];
+  const getStudent = async (val) => {
+    setLoadingStudent(true);
+    await API(`student.getStudent`, {
+      params: {
+        size: 20,
+        page: 0,
+        sort: "",
+        search: val,
+        id: "",
+        jurusan: "",
+      },
+    })
+      .then((res) => {
+        setLoadingStudent(false);
+        if (res.status === 200 && res.data.status === "success") {
+          const { data } = res.data;
+          setDataStudents(data?.content);
+        }
+      })
+      .catch((res) => {
+        setLoadingStudent(false);
+        notification.info({
+          message: "Gagal mendapatkan data",
+          description: "Data mahasiswa gagal didapatkan!",
+        });
+      });
+  };
+
+  const uploadFile = (file, userName, oldpath, type) => {
+    return new Promise((resolve) => {
+      let formData = new FormData();
+      formData.append("file", file);
+
+      apiClient({
+        method: "put",
+        url: "/api/upload",
+        data: formData,
+        headers: { "Content-Type": "multipart/form-data" },
+        params: {
+          username: userName,
+          oldpath: oldpath,
+        },
+      })
+        .then((res) => {
+          if (res.status === 200 && res.data.status === "success") {
+            const { data } = res.data;
+            if (type === "thesesPartial") {
+              setThesesPartialUrl(data);
+            } else {
+              setThesesFullUrl(data);
+            }
+            resolve(data);
+          }
+        })
+        .catch(() => {
+          setLoadingForm(false);
+          if (type === "thesesPartial") {
+            notification.info({
+              message: "Gagal upload file",
+              description: "File skripsi partial gagal untuk di upload!",
+            });
+          } else {
+            notification.info({
+              message: "Gagal upload file",
+              description: "File skripsi full gagal untuk di upload!",
+            });
+          }
+        });
+    });
+  };
+
+  const createTheses = (values) => {
+    API(`theses.createTheses`, {
+      data: values,
+    })
+      .then((res) => {
+        setLoadingForm(false);
+        if (res.status === 200 && res.data.status === "success") {
+          notification.success({
+            message: "Berhasil membuat data",
+            description: "Data tugas akhir berhasil dibuat!",
+          });
+          navigate("/repository");
+        } else {
+          notification.info({
+            message: "Gagal membuat data",
+            description: "Data tugas akhir gagal dibuat!",
+          });
+        }
+      })
+      .catch((res) => {
+        setLoadingForm(false);
+        notification.error({
+          message: "Gagal membuat data",
+          description: "Data tugas akhir gagal dibuat!",
+        });
+      });
+  };
+
+  const updateTheses = (values) => {
+    API(`theses.updateTheses`, {
+      data: values,
+      query: { id: thesesId },
+    })
+      .then((res) => {
+        setLoadingForm(false);
+        if (res.status === 200 && res.data.status === "success") {
+          notification.success({
+            message: "Berhasil memperbarui data",
+            description: "Data tugas akhir berhasil diperbarui!",
+          });
+          navigate("/repository");
+        } else {
+          notification.info({
+            message: "Gagal memperbarui data",
+            description: "Data tugas akhir gagal diperbarui!",
+          });
+        }
+      })
+      .catch((res) => {
+        setLoadingForm(false);
+        notification.error({
+          message: "Gagal memperbarui data",
+          description: "Data tugas akhir gagal diperbarui!",
+        });
+      });
+  };
+
+  const onSearchStudent = _debounce((val) => {
+    if (val) {
+      getStudent(val);
+    }
+  }, 500);
 
   const handleChangeFile = (info, type) => {
     const isPdf = info.file.type === "application/pdf";
-    const isSizeSkripsi = info.file.size / 1024 / 1024 < 5;
-    const isSizeSkripsiFull = info.file.size / 1024 / 1024 < 15;
-    if (type === "skripsi") {
+    const isSizeSkripsi = info.file.size / 1024 / 1024 <= 5;
+    const isSizeSkripsiFull = info.file.size / 1024 / 1024 <= 15;
+    if (type === "thesesPartial") {
       if (!isPdf) {
         setValidationSkripsi({
           help: "Harap format berbentuk pdf",
@@ -103,7 +254,7 @@ export default function RepositoryFormPage() {
           help: "",
           status: "success",
         });
-        // getBase64(info.file.originFileObj, (fileUrl) => setFileBase64(fileUrl));
+        setFileBase64(info.file.originFileObj);
       }
     } else {
       if (!isPdf) {
@@ -114,7 +265,7 @@ export default function RepositoryFormPage() {
       }
       if (!isSizeSkripsiFull) {
         setValidationSkripsiFull({
-          help: "Harap upload file dibawah 20mb",
+          help: "Harap upload file dibawah 15mb",
           status: "error",
         });
       }
@@ -123,21 +274,53 @@ export default function RepositoryFormPage() {
           help: "",
           status: "success",
         });
-        // getBase64(info.file.originFileObj, (fileUrl) =>
-        //   setFileFullBase64(fileUrl)
-        // );
+        setFileFullBase64(info.file.originFileObj);
       }
     }
   };
 
-  const onFinish = (value) => {
+  const onFinish = async (values) => {
     if (
-      urlSkripsi !== "" ||
+      thesesPartialUrl !== "" ||
       fileBase64 !== null ||
-      urlSkripsiFull !== "" ||
+      thesesFullUrl !== "" ||
       fileFullBase64 !== null
     ) {
-      console.log(value);
+      let newUrl = thesesPartialUrl;
+      let newFullUrl = thesesFullUrl;
+
+      if (fileBase64 && loadingForm) {
+        newUrl = await uploadFile(
+          fileBase64,
+          selectedStudent?.nim,
+          thesesPartialUrl,
+          "thesesPartial"
+        );
+      }
+      if (fileFullBase64 && loadingForm) {
+        newFullUrl = await uploadFile(
+          fileFullBase64,
+          selectedStudent?.nim,
+          thesesFullUrl,
+          "thesesFull"
+        );
+      }
+
+      let newValues = {
+        thesesTitle: values.thesesTitle,
+        abstracts: values.abstracts,
+        keywords: values.keywords,
+        partialDocumentUrl: newUrl,
+        fullDocumentUrl: newFullUrl,
+        year: values.year.format("YYYY"),
+        students: selectedStudent,
+      };
+
+      if (state?.type === "Create" && loadingForm) {
+        createTheses(newValues);
+      } else if (state?.type === "Update" && loadingForm) {
+        updateTheses(newValues);
+      }
     } else {
       setValidationSkripsi({
         help: "Harap upload dokumen",
@@ -148,14 +331,13 @@ export default function RepositoryFormPage() {
         status: "error",
       });
     }
-    // form.resetFields();
   };
 
   const onFinishFailed = (value) => {
     if (
-      urlSkripsi === "" &&
+      thesesPartialUrl === "" &&
       fileBase64 === null &&
-      urlSkripsiFull === "" &&
+      thesesFullUrl === "" &&
       fileFullBase64 === null
     ) {
       setValidationSkripsi({
@@ -182,6 +364,14 @@ export default function RepositoryFormPage() {
     return current && current > moment().endOf("year");
   }
 
+  const onChangeStudent = (value) => {
+    setSelectedStudent(
+      dataStudents.find(
+        (item) => item.studentId.toString() === value.toString()
+      )
+    );
+  };
+
   return (
     <div className="flex flex-col">
       <PageHeader
@@ -197,9 +387,16 @@ export default function RepositoryFormPage() {
         }
       />
       <div className="font-semibold mt-7">
-        <div className="text-4xl text-primary1">{state?.type} Repository</div>
+        <div className="text-4xl text-primary1">
+          {state?.type === "Create"
+            ? "Buat"
+            : state?.type === "Update"
+            ? "Edit"
+            : "Detail"}{" "}
+          Tugas Akhir
+        </div>
         <Form
-          name="formMahasiswa"
+          name="formTheses"
           onFinish={onFinish}
           form={form}
           onFinishFailed={onFinishFailed}
@@ -216,7 +413,7 @@ export default function RepositoryFormPage() {
                 <div>Judul</div>
                 <div>
                   <Form.Item
-                    name="judul"
+                    name="thesesTitle"
                     rules={[
                       {
                         required: true,
@@ -238,7 +435,7 @@ export default function RepositoryFormPage() {
                 <div>Abstrak</div>
                 <div>
                   <Form.Item
-                    name="abstrak"
+                    name="abstracts"
                     rules={[
                       {
                         required: true,
@@ -260,7 +457,7 @@ export default function RepositoryFormPage() {
                 <div>Kata Kunci</div>
                 <div>
                   <Form.Item
-                    name="keyword"
+                    name="keywords"
                     rules={[
                       {
                         required: true,
@@ -282,21 +479,31 @@ export default function RepositoryFormPage() {
                 <div>Mahasiswa</div>
                 <div>
                   <Form.Item
-                    name="mahasiswaId"
+                    name="studentId"
                     rules={[
                       { required: true, message: "Harap pilih jurusan!" },
                     ]}
                   >
                     <Select
-                      placeholder="Pilih Mahasiswa"
+                      showSearch
+                      optionFilterProp="children"
+                      notFoundContent={
+                        loadingStudent ? <Spin size="small" /> : null
+                      }
+                      onSearch={onSearchStudent}
+                      placeholder="Cari Mahasiswa"
                       className="w-full"
                       allowClear
                       style={{ alignItems: "center" }}
-                      disabled={state?.type === "Detail"}
+                      disabled={
+                        state?.type === "Detail" || state?.type === "Update"
+                      }
+                      onChange={onChangeStudent}
                     >
-                      {dataMahasiswa?.map((item) => (
-                        <Option key={item.mahasiswaId}>
-                          {item.namaMahasiswa}
+                      {dataStudents?.map((item) => (
+                        <Option key={item.studentId}>
+                          {item.nim} - {item.studentName} -{" "}
+                          {item.majors.majorName}
                         </Option>
                       ))}
                     </Select>
@@ -309,7 +516,7 @@ export default function RepositoryFormPage() {
                 <div>Tahun</div>
                 <div>
                   <Form.Item
-                    name="tahun"
+                    name="year"
                     rules={[{ required: true, message: "Harap pilih tahun!" }]}
                   >
                     <DatePicker
@@ -334,23 +541,23 @@ export default function RepositoryFormPage() {
                     <Upload
                       disabled={state?.type === "Detail"}
                       showUploadList={false}
-                      onChange={(info) => handleChangeFile(info, "skripsi")}
+                      onChange={(info) =>
+                        handleChangeFile(info, "thesesPartial")
+                      }
                     >
                       <Button icon={<UploadOutlined />}>Upload</Button>
                     </Upload>
-                    {fileBase64 !== null || urlSkripsi !== "" ? (
+                    {fileBase64 !== null || thesesPartialPath !== "" ? (
                       <div className="text-2xl text-primary1 cursor-pointer flex flex-row mt-2 gap-3 items-center">
                         <FileOutlined />
                         <div
                           className="text-sm hover:opacity-80"
                           onClick={() =>
-                            window.open(
-                              fileBase64 !== null ? fileBase64 : urlSkripsi,
-                              "_blank"
-                            )
+                            fileBase64 === null &&
+                            window.open(thesesPartialPath, "_blank")
                           }
                         >
-                          Open File
+                          {fileBase64?.name || "Download File"}
                         </div>
                       </div>
                     ) : (
@@ -377,21 +584,17 @@ export default function RepositoryFormPage() {
                     >
                       <Button icon={<UploadOutlined />}>Upload</Button>
                     </Upload>
-                    {fileFullBase64 !== null || urlSkripsiFull !== "" ? (
+                    {fileFullBase64 !== null || thesesFullPath !== "" ? (
                       <div className="text-2xl text-primary1 cursor-pointer flex flex-row mt-2 gap-3 items-center">
                         <FileOutlined />
                         <div
                           className="text-sm hover:opacity-80"
                           onClick={() =>
-                            window.open(
-                              fileFullBase64 !== null
-                                ? fileFullBase64
-                                : urlSkripsiFull,
-                              "_blank"
-                            )
+                            fileFullBase64 === null &&
+                            window.open(thesesFullPath, "_blank")
                           }
                         >
-                          Open File
+                          {fileFullBase64?.name || "Download File"}
                         </div>
                       </div>
                     ) : (
@@ -408,19 +611,27 @@ export default function RepositoryFormPage() {
               <Button
                 className="md:w-auto w-full"
                 onClick={() => navigate("/repository")}
+                disabled={loadingForm}
               >
-                Cancel
+                Batal
               </Button>
               <Button
                 className="md:w-auto w-full"
                 htmlType="submit"
                 type="primary"
-                //   loading={loading}
+                loading={loadingForm}
+                onClick={() => setLoadingForm(true)}
               >
-                {state?.type}
+                {state?.type === "Create" ? "Buat" : "Edit"}
               </Button>
             </div>
           )}
+          <Form.Item name="partialDocumentUrl" hidden={true}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="fullDocumentUrl" hidden={true}>
+            <Input />
+          </Form.Item>
         </Form>
       </div>
     </div>

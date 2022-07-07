@@ -1,11 +1,10 @@
-import { notification, Popconfirm, Select, Table } from "antd";
+import { notification, Popconfirm, Table } from "antd";
 import Search from "antd/lib/input/Search";
 import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API } from "../../../Services/axios";
 
-export default function MahasiswaPage() {
-  const { Option } = Select;
+export default function AdminPage() {
   const navigate = useNavigate();
   const initialParams = {
     size: 20,
@@ -13,42 +12,16 @@ export default function MahasiswaPage() {
     sort: "",
     search: "",
     id: "",
-    jurusan: "",
+    roles: "admin",
   };
-  const [dataStudents, setDataStudents] = useState([]);
-  const [dataMajors, setDataMajors] = useState([]);
+  const [dataAdmin, setDataAdmin] = useState([]);
   const [loadingTable, setLoadingTable] = useState(false);
   const [params, setParams] = useState(initialParams);
   const [meta, setMeta] = useState({ size: 20, page: 1, total: 0 });
 
-  const getMajor = async () => {
-    await API(`major.getMajor`, {
-      params: {
-        size: 999999,
-        page: 0,
-        sort: "",
-        search: "",
-        id: "",
-        fakultas: "",
-      },
-    })
-      .then((res) => {
-        if (res.status === 200 && res.data.status === "success") {
-          const { data } = res.data;
-          setDataMajors(data?.content);
-        }
-      })
-      .catch((res) => {
-        notification.info({
-          message: "Gagal mendapatkan data",
-          description: "Data jurusan gagal didapatkan!",
-        });
-      });
-  };
-
-  const getStudent = useCallback(async () => {
+  const getAdmin = useCallback(async () => {
     setLoadingTable(true);
-    await API(`student.getStudent`, {
+    await API(`admin.getAdmin`, {
       params,
     })
       .then((res) => {
@@ -58,7 +31,7 @@ export default function MahasiswaPage() {
           const newData = data?.content.map((item, index) => {
             return { key: index, ...item };
           });
-          setDataStudents(newData);
+          setDataAdmin(newData);
           setMeta({
             size: data?.size,
             page: data?.page + 1,
@@ -70,70 +43,55 @@ export default function MahasiswaPage() {
         setLoadingTable(false);
         notification.info({
           message: "Gagal mendapatkan data",
-          description: "Data mahasiswa gagal didapatkan!",
+          description: "Data admin gagal didapatkan!",
         });
       });
   }, [params]);
 
-  const deleteStudent = async (id) => {
-    await API(`student.deleteStudent`, { query: { id } })
+  const deleteAdmin = async (id) => {
+    await API(`admin.deleteAdmin`, { query: { id } })
       .then((res) => {
         setParams(initialParams);
         if (res.status === 200 && res.data.status === "success") {
           notification.success({
             message: "Berhasil menghapus data",
-            description: "Data mahasiswa berhasil dihapus!",
+            description: "Data admin berhasil dihapus!",
           });
         } else {
           notification.info({
             message: "Gagal menghapus data",
-            description: "Data mahasiswa gagal dihapus!",
+            description: "Data admin gagal dihapus!",
           });
         }
       })
       .catch((res) => {
         notification.error({
           message: "Gagal menghapus data",
-          description: "Data mahasiswa gagal dihapus!",
+          description: "Data admin gagal dihapus!",
         });
       });
   };
 
   useEffect(() => {
-    getMajor();
-  }, []);
-
-  useEffect(() => {
-    getStudent();
-  }, [getStudent]);
+    getAdmin();
+  }, [getAdmin]);
 
   const columns = [
     {
-      title: "NIM",
-      dataIndex: "nim",
-      key: "nim",
+      title: "Username",
+      dataIndex: "userName",
+      key: "userName",
     },
     {
-      title: "Nama Mahasiswa",
-      dataIndex: "studentName",
-      key: "studentName",
-    },
-    {
-      title: "Nama Jurusan",
-      dataIndex: "majors",
-      key: "majors.majorName",
-      render: (text) => text.majorName,
-    },
-    {
-      title: "Angkatan",
-      dataIndex: "year",
-      key: "year",
+      title: "Nama Admin",
+      dataIndex: "name",
+      key: "name",
     },
     {
       title: "Status",
-      dataIndex: "users",
-      key: "users.status",
-      render: (text) => (text.status ? "Aktif" : "Tidak Aktif"),
+      dataIndex: "status",
+      key: "status",
+      render: (text) => (text ? "Aktif" : "Tidak Aktif"),
     },
     {
       title: "Aksi",
@@ -142,20 +100,20 @@ export default function MahasiswaPage() {
         <div className="text-primary1 md:flex-row flex-col flex gap-4 text-sm font-semibold">
           <div
             className="cursor-pointer hover:opacity-80"
-            onClick={() => handleRow("Detail", record.studentId)}
+            onClick={() => handleRow("Detail", record.userId)}
           >
             Detail
           </div>
           <div
             className="cursor-pointer hover:opacity-80"
-            onClick={() => handleRow("Update", record.studentId)}
+            onClick={() => handleRow("Update", record.userId)}
           >
             Edit
           </div>
           <Popconfirm
             title="Hapus data ini?"
             placement="left"
-            onConfirm={() => deleteStudent(record.studentId)}
+            onConfirm={() => deleteAdmin(record.userId)}
           >
             <div className="cursor-pointer hover:opacity-80">Hapus</div>
           </Popconfirm>
@@ -181,7 +139,7 @@ export default function MahasiswaPage() {
   };
 
   const handleRow = (type, id) => {
-    navigate(`/mahasiswa-form/${id}`, {
+    navigate(`/admin-form/${id}`, {
       state: { type: type },
     });
   };
@@ -189,39 +147,24 @@ export default function MahasiswaPage() {
   return (
     <div className="flex flex-col items-center">
       <div className="flex flex-col md:flex-row w-full md:justify-between justify-center gap-5">
-        <div className="md:w-1/2">
+        <div className="md:w-10/12">
           <Search
-            placeholder="Cari Nama Mahasiswa, NIM atau Angkatan"
+            placeholder="Cari Nama admin atau Username"
             allowClear
             enterButton
             onSearch={onSearch}
           />
         </div>
-        <div className="md:w-2/12">
-          <Select
-            placeholder="Pilih Jurusan"
-            className="w-full"
-            allowClear
-            style={{ alignItems: "center" }}
-            onChange={(value) =>
-              setParams({ ...params, page: 0, jurusan: value || "" })
-            }
-          >
-            {dataMajors?.map((item) => (
-              <Option key={item.majorName}>{item.majorName}</Option>
-            ))}
-          </Select>
-        </div>
         <div>
           <div
-            className="w-full text-white bg-primary2 h-8 items-center justify-center flex cursor-pointer hover:opacity-90 px-4 rounded-sm"
+            className="w-full md:w-32 text-white bg-primary2 h-8 items-center justify-center flex cursor-pointer hover:opacity-90 px-4 rounded-sm"
             onClick={() =>
-              navigate(`/mahasiswa-form`, {
+              navigate(`/admin-form`, {
                 state: { type: "Create" },
               })
             }
           >
-            + Buat Mahasiswa
+            + Buat Admin
           </div>
         </div>
       </div>
@@ -229,7 +172,7 @@ export default function MahasiswaPage() {
         <Table
           loading={loadingTable}
           scroll={{ x: 724 }}
-          dataSource={dataStudents}
+          dataSource={dataAdmin}
           columns={columns}
           onChange={handleTable}
           pagination={{

@@ -1,31 +1,96 @@
-import { Input, Form, Modal, Button } from "antd";
-import React, { useEffect } from "react";
+import { Input, Form, Modal, Button, notification } from "antd";
+import React, { useEffect, useState } from "react";
+import { API } from "../../../Services/axios";
 
 export default function FakultasForm({ visible, onOk, onCancel, type, data }) {
   const [form] = Form.useForm();
+  const [loadingForm, setLoadingForm] = useState(false);
 
   useEffect(() => {
     if (type === "Update") {
       const setData = () => {
         form.setFieldsValue({
-          namaFakultas: data.namaFakultas,
+          facultyName: data.facultyName,
         });
       };
       setData();
     }
   }, [data, form, type]);
 
-  const onFinish = (value) => {
-    console.log(value);
-    onOk();
-    form.resetFields();
+  const createFaculty = async (values) => {
+    setLoadingForm(true);
+    await API(`faculty.createFaculty`, {
+      data: values,
+    })
+      .then((res) => {
+        setLoadingForm(false);
+        onOk();
+        form.resetFields();
+        if (res.status === 200 && res.data.status === "success") {
+          notification.success({
+            message: "Berhasil membuat data",
+            description: "Data fakultas berhasil dibuat!",
+          });
+        } else {
+          notification.info({
+            message: "Gagal membuat data",
+            description: "Data fakultas gagal dibuat!",
+          });
+        }
+      })
+      .catch((res) => {
+        setLoadingForm(false);
+        notification.error({
+          message: "Gagal membuat data",
+          description: "Data fakultas gagal dibuat!",
+        });
+      });
+  };
+
+  const updateFaculty = async (values) => {
+    setLoadingForm(true);
+    await API(`faculty.updateFaculty`, {
+      data: values,
+      query: { id: data?.facultyId },
+    })
+      .then((res) => {
+        setLoadingForm(false);
+        onOk();
+        form.resetFields();
+        if (res.status === 200 && res.data.status === "success") {
+          notification.success({
+            message: "Berhasil memperbarui data",
+            description: "Data fakultas berhasil diperbarui!",
+          });
+        } else {
+          notification.info({
+            message: "Gagal memperbarui data",
+            description: "Data fakultas gagal diperbarui!",
+          });
+        }
+      })
+      .catch((res) => {
+        setLoadingForm(false);
+        notification.error({
+          message: "Gagal memperbarui data",
+          description: "Data fakultas gagal diperbarui!",
+        });
+      });
+  };
+
+  const onFinish = (values) => {
+    if (type === "Create") {
+      createFaculty(values);
+    } else {
+      updateFaculty(values);
+    }
   };
 
   return (
     <Modal
       title={
         <div className="text-primary1 font-semibold text-base">
-          {type} Fakultas
+          {type === "Create" ? "Buat" : "Edit"} Fakultas
         </div>
       }
       visible={visible}
@@ -36,33 +101,27 @@ export default function FakultasForm({ visible, onOk, onCancel, type, data }) {
       centered
       footer={[
         <Button key="back" onClick={onCancel}>
-          Cancel
+          Batal
         </Button>,
         <Button
           key="submit"
           htmlType="submit"
           type="primary"
-          //   loading={loading}
-          form="formFakultas"
+          loading={loadingForm}
+          form="facultyForm"
         >
-          {type}
+          {type === "Create" ? "Buat" : "Edit"}
         </Button>,
       ]}
     >
-      <Form
-        id="formFakultas"
-        name="formFakultas"
-        onFinish={onFinish}
-        form={form}
-        // onFinishFailed={onFinishFailed}
-      >
+      <Form id="facultyForm" name="facultyForm" onFinish={onFinish} form={form}>
         <Form.Item
           label={
             <div className="text-primary1 font-semibold text-sm">
               Nama Fakultas
             </div>
           }
-          name="namaFakultas"
+          name="facultyName"
           rules={[{ required: true, message: "Harap masukkan nama fakultas!" }]}
         >
           <Input placeholder="Masukkan Nama Fakultas" allowClear />

@@ -63,6 +63,10 @@ export default function Nav() {
       key: "jurusan",
       label: "Jurusan",
     },
+    localStorage.getItem("roleName")?.toLowerCase() === "super admin" && {
+      key: "admin",
+      label: "Admin",
+    },
     {
       key: "dosen",
       label: "Dosen",
@@ -75,12 +79,22 @@ export default function Nav() {
 
   const userItems = [
     {
+      key: "name",
+      label: localStorage.getItem("name"),
+      disabled: true,
+    },
+    {
+      key: "userName",
+      label: localStorage.getItem("userName"),
+      disabled: true,
+    },
+    {
       key: "profile",
-      label: "Detail Profile",
+      label: "Detail Profil",
     },
     {
       key: "change",
-      label: "Change Password",
+      label: "Ganti Password",
     },
     {
       key: "logout",
@@ -91,9 +105,9 @@ export default function Nav() {
   const menuMobileItems = [
     {
       key: "/",
-      label: "Home",
+      label: "Beranda",
     },
-    localStorage.getItem("userScope") === "admin" && {
+    localStorage.getItem("roleName")?.toLowerCase().includes("admin") && {
       key: "master",
       label: "Master",
       children: menuItems,
@@ -102,12 +116,12 @@ export default function Nav() {
       key: "repository",
       label: "Repository",
     },
-    localStorage.getItem("userScope") === "user" && {
+    localStorage.getItem("roleName") && {
       key: "profile-user",
       label: "Profile",
       children: userItems.filter((item) => item.key !== "logout"),
     },
-    !localStorage.getItem("userScope")
+    !localStorage.getItem("roleName")
       ? {
           key: "login",
           label: "Login",
@@ -146,9 +160,12 @@ export default function Nav() {
         </div>
         <div className="md:inline-flex hidden items-center gap-10">
           <Link className="text-white hover:text-primaryVariant" to="/">
-            Home
+            Beranda
           </Link>
-          {localStorage.getItem("userScope") === "admin" && (
+          {localStorage
+            .getItem("roleName")
+            ?.toLowerCase()
+            .includes("admin") && (
             <Dropdown arrow placement="bottomLeft" overlay={menu}>
               <div
                 className="text-white hover:text-primaryVariant cursor-pointer"
@@ -164,20 +181,10 @@ export default function Nav() {
           >
             Repository
           </Link>
-          {localStorage.getItem("userScope") === "admin" ? (
-            <div
-              className="text-white hover:text-primaryVariant cursor-pointer"
-              onClick={() => {
-                localStorage.clear();
-                navigate("/", { replace: true });
-              }}
-            >
-              Logout
-            </div>
-          ) : localStorage.getItem("userScope") === "user" ? (
+          {localStorage.getItem("roleName") ? (
             <Dropdown
               arrow
-              placement="bottomLeft"
+              placement="bottomRight"
               overlay={user}
               className="cursor-pointer"
             >
@@ -221,8 +228,12 @@ export default function Nav() {
               }}
             />
           </div>
-          <div className="text-lg font-bold text-primary1">Bagus Hermawan</div>
-          <div className="text-lg font-bold text-primary1">55201111444</div>
+          <div className="text-lg font-bold text-primary1">
+            {localStorage.getItem("name")}
+          </div>
+          <div className="text-lg font-bold text-primary1">
+            {localStorage.getItem("userName")}
+          </div>
         </div>
         <Menu
           onClick={(e) => onClickMobile(e)}

@@ -1,10 +1,33 @@
+import { notification } from "antd";
 import Search from "antd/lib/input/Search";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CardHome from "../../Components/CardHome";
+import { API } from "../../Services/axios";
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const [dataHome, setDataHome] = useState({});
+
+  const getHome = async () => {
+    await API(`home.getHomeData`)
+      .then((res) => {
+        if (res.status === 200 && res.data.status === "success") {
+          const { data } = res.data;
+          setDataHome(data);
+        }
+      })
+      .catch((res) => {
+        notification.info({
+          message: "Gagal mendapatkan data",
+          description: "Data beranda gagal didapatkan!",
+        });
+      });
+  };
+
+  useEffect(() => {
+    getHome();
+  }, []);
 
   const onSearch = (value) => {
     if (value !== "") {
@@ -18,16 +41,16 @@ export default function HomePage() {
         Selamat Datang di Repository <br /> Universitas Nurtanio
       </h1>
       <Search
-        placeholder="search repository"
+        placeholder="cari tugas akhir"
         allowClear
-        enterButton="Search"
+        enterButton="Cari"
         className="mb-16"
         onSearch={onSearch}
       />
       <div className="grid lg:grid-cols-3 w-full gap-5">
-        <CardHome title="Repository" value={1200} />
-        <CardHome title="Dosen Aktif" value={50} />
-        <CardHome title="Mahasiswa Aktif" value={800} />
+        <CardHome title="Repository" value={dataHome?.totalRepository} />
+        <CardHome title="Dosen Aktif" value={dataHome?.totalDosen} />
+        <CardHome title="Mahasiswa Aktif" value={dataHome?.totalMahasiswa} />
       </div>
     </div>
   );

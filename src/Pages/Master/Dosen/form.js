@@ -1,20 +1,20 @@
-import { ArrowLeftOutlined, PlusOutlined } from "@ant-design/icons/lib/icons";
+import { ArrowLeftOutlined } from "@ant-design/icons/lib/icons";
 import {
   Button,
   Col,
   Divider,
   Form,
   Input,
+  notification,
   PageHeader,
   Radio,
   Row,
   Select,
   Space,
-  Upload,
 } from "antd";
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-// import { getBase64 } from "../../../functions/Global";
+import { API } from "../../../Services/axios";
 
 export default function DosenFormPage() {
   const navigate = useNavigate();
@@ -23,94 +23,149 @@ export default function DosenFormPage() {
   const { Option } = Select;
   const { Password } = Input;
   const { state } = useLocation();
-  const [urlImage, setUrlImage] = useState("");
-  const [base64, setBase64] = useState(null);
-  const [validationImageType, setValidationImageType] = useState({
-    help: "",
-    status: "success",
-  });
+  const [dataFaculties, setDataFaculties] = useState([]);
+  const [loadingForm, setLoadingForm] = useState(false);
+
+  const getFaculty = async () => {
+    await API(`faculty.getFaculty`, {
+      params: {
+        size: 999999,
+        page: 0,
+        sort: "",
+        search: "",
+        id: "",
+      },
+    })
+      .then((res) => {
+        if (res.status === 200 && res.data.status === "success") {
+          const { data } = res.data;
+          setDataFaculties(data?.content);
+        }
+      })
+      .catch((res) => {
+        notification.info({
+          message: "Gagal mendapatkan data",
+          description: "Data fakultas gagal didapatkan!",
+        });
+      });
+  };
+
+  const getLectureDetail = async () => {
+    await API(`lecture.getLecture`, {
+      params: {
+        size: "",
+        page: "",
+        sort: "",
+        search: "",
+        id: dosenId,
+      },
+    })
+      .then((res) => {
+        if (res.status === 200 && res.data.status === "success") {
+          const { data } = res.data;
+          const setData = () => {
+            form.setFieldsValue({
+              lectureName: data.lectureName,
+              nidn: data.nidn,
+              password: "",
+              status: data.users.status,
+              facultyId: data.faculties.facultyId.toString(),
+            });
+          };
+          setData();
+        }
+      })
+      .catch((res) => {
+        notification.info({
+          message: "Gagal mendapatkan data",
+          description: "Data detail dosen gagal didapatkan!",
+        });
+      });
+  };
+
+  const createLecture = async (values) => {
+    setLoadingForm(true);
+    await API(`lecture.createLecture`, {
+      data: values,
+    })
+      .then((res) => {
+        setLoadingForm(false);
+        if (res.status === 200 && res.data.status === "success") {
+          notification.success({
+            message: "Berhasil membuat data",
+            description: "Data dosen berhasil dibuat!",
+          });
+          navigate("/dosen");
+        } else {
+          notification.info({
+            message: "Gagal membuat data",
+            description: "Data dosen gagal dibuat!",
+          });
+        }
+      })
+      .catch((res) => {
+        setLoadingForm(false);
+        notification.error({
+          message: "Gagal membuat data",
+          description: "Data dosen gagal dibuat!",
+        });
+      });
+  };
+
+  const updateLecture = async (values) => {
+    setLoadingForm(true);
+    await API(`lecture.updateLecture`, {
+      data: values,
+      query: { id: dosenId },
+    })
+      .then((res) => {
+        setLoadingForm(false);
+        if (res.status === 200 && res.data.status === "success") {
+          notification.success({
+            message: "Berhasil memperbarui data",
+            description: "Data dosen berhasil diperbarui!",
+          });
+          navigate("/dosen");
+        } else {
+          notification.info({
+            message: "Gagal memperbarui data",
+            description: "Data dosen gagal diperbarui!",
+          });
+        }
+      })
+      .catch((res) => {
+        setLoadingForm(false);
+        notification.error({
+          message: "Gagal memperbarui data",
+          description: "Data dosen gagal diperbarui!",
+        });
+      });
+  };
+
+  useEffect(() => {
+    getFaculty();
+  }, []);
 
   useEffect(() => {
     if (state?.type !== "Create" && dosenId) {
-      getDosenDetail();
+      getLectureDetail();
     }
   }, [state, dosenId]);
 
-  const getDosenDetail = () => {
-    setUrlImage(
-      "https://png.pngtree.com/element_our/png/20181022/man-avatar-icon-professional-man-character-business-man-avatar-carton-symbol-png_206531.jpg"
-    );
-    const setData = () => {
-      form.setFieldsValue({
-        namaDosen: "Dr. Drs. H. Aji Komarudin, M.Si.",
-        nidn: "8809840017",
-        password: "tes123",
-        status: 1,
-        fakultasId: "1",
-      });
+  const onFinish = (values) => {
+    let newValues = {
+      lectureName: values.lectureName,
+      nidn: values.nidn,
+      password: values.password,
+      faculties: dataFaculties.find(
+        (item) => item.facultyId.toString() === values.facultyId
+      ),
+      status: values.status,
     };
-    setData();
-  };
-
-  const dataFakultas = [
-    {
-      fakultasId: "1",
-      namaFakultas: "Fakultas Ilmu Komputer",
-    },
-    {
-      fakultasId: "2",
-      namaFakultas: "Fakultas Ekonomi",
-    },
-  ];
-
-  const handleChangeImage = (info) => {
-    const isJpgOrPng =
-      info.file.type === "image/jpeg" || info.file.type === "image/png";
-    const isSize = info.file.size < 204800;
-    if (!isJpgOrPng) {
-      setValidationImageType({
-        help: "Harap format berbentuk jpg, jpeg atau png",
-        status: "error",
-      });
-    }
-    if (!isSize) {
-      setValidationImageType({
-        help: "Harap upload gambar dibawah 200kb",
-        status: "error",
-      });
-    }
-    if (isJpgOrPng && isSize) {
-      setValidationImageType({
-        help: "",
-        status: "success",
-      });
-      //   getBase64(info.file.originFileObj, (imageUrl) => setBase64(imageUrl));
-    }
-  };
-
-  const onFinish = (value) => {
-    if (urlImage !== "" || base64 !== null) {
-      console.log(value);
+    if (state?.type === "Create") {
+      createLecture(newValues);
     } else {
-      setValidationImageType({
-        help: "Harap upload foto profile",
-        status: "error",
-      });
-    }
-    // form.resetFields();
-  };
-
-  const onFinishFailed = (value) => {
-    if (urlImage === "" && base64 === null) {
-      setValidationImageType({
-        help: "Harap upload foto profile",
-        status: "error",
-      });
-    } else {
-      setValidationImageType({
-        help: "",
-        status: "success",
-      });
+      updateLecture(newValues);
     }
   };
 
@@ -129,13 +184,15 @@ export default function DosenFormPage() {
         }
       />
       <div className="font-semibold mt-7">
-        <div className="text-4xl text-primary1">{state?.type} Dosen</div>
-        <Form
-          name="formDosen"
-          onFinish={onFinish}
-          form={form}
-          onFinishFailed={onFinishFailed}
-        >
+        <div className="text-4xl text-primary1">
+          {state?.type === "Create"
+            ? "Buat"
+            : state?.type === "Update"
+            ? "Edit"
+            : "Detail"}{" "}
+          Dosen
+        </div>
+        <Form name="formDosen" onFinish={onFinish} form={form}>
           <Divider />
           <Row
             gutter={[
@@ -148,7 +205,7 @@ export default function DosenFormPage() {
                 <div>Nama Dosen</div>
                 <div>
                   <Form.Item
-                    name="namaDosen"
+                    name="lectureName"
                     rules={[
                       {
                         required: true,
@@ -159,7 +216,8 @@ export default function DosenFormPage() {
                     <Input
                       allowClear
                       placeholder="Masukkan Nama Dosen"
-                      disabled={state?.type === "Detail"}
+                      readOnly={state?.type === "Detail"}
+                      disabled={loadingForm}
                     />
                   </Form.Item>
                 </div>
@@ -181,7 +239,8 @@ export default function DosenFormPage() {
                     <Input
                       allowClear
                       placeholder="Masukkan NIDN"
-                      disabled={state?.type === "Detail"}
+                      readOnly={state?.type === "Detail"}
+                      disabled={loadingForm}
                     />
                   </Form.Item>
                 </div>
@@ -192,7 +251,7 @@ export default function DosenFormPage() {
                 <div>Fakultas</div>
                 <div>
                   <Form.Item
-                    name="fakultasId"
+                    name="facultyId"
                     rules={[
                       { required: true, message: "Harap pilih fakultas!" },
                     ]}
@@ -202,37 +261,45 @@ export default function DosenFormPage() {
                       className="w-full"
                       allowClear
                       style={{ alignItems: "center" }}
-                      disabled={state?.type === "Detail"}
+                      disabled={state?.type === "Detail" || loadingForm}
                     >
-                      {dataFakultas?.map((item) => (
-                        <Option key={item.fakultasId}>
-                          {item.namaFakultas}
-                        </Option>
+                      {dataFaculties?.map((item) => (
+                        <Option key={item.facultyId}>{item.facultyName}</Option>
                       ))}
                     </Select>
                   </Form.Item>
                 </div>
               </div>
             </Col>
-            <Col xs={24} md={12}>
-              <div className="flex flex-col text-primary1 gap-3">
-                <div>Password</div>
-                <div>
-                  <Form.Item
-                    name="password"
-                    rules={[
-                      { required: true, message: "Harap masukkan password!" },
-                    ]}
-                  >
-                    {state?.type === "Detail" ? (
-                      <Input disabled />
-                    ) : (
-                      <Password placeholder="Masukkan Password" allowClear />
-                    )}
-                  </Form.Item>
+            {state?.type !== "Detail" && (
+              <Col xs={24} md={12}>
+                <div className="flex flex-col text-primary1 gap-3">
+                  <div>Password</div>
+                  <div>
+                    <Form.Item
+                      name="password"
+                      extra={
+                        state?.type === "Update"
+                          ? "Kosongkan formulir password untuk tidak mengubah password saat ini"
+                          : ""
+                      }
+                      rules={[
+                        {
+                          required: state?.type === "Create",
+                          message: "Harap masukkan password!",
+                        },
+                      ]}
+                    >
+                      <Password
+                        placeholder="Masukkan Password"
+                        allowClear
+                        disabled={loadingForm}
+                      />
+                    </Form.Item>
+                  </div>
                 </div>
-              </div>
-            </Col>
+              </Col>
+            )}
             <Col xs={24} md={12}>
               <div className="flex flex-col text-primary1 gap-3">
                 <div>Status</div>
@@ -243,43 +310,13 @@ export default function DosenFormPage() {
                   >
                     <Radio.Group
                       className="font-medium text-primary1"
-                      disabled={state?.type === "Detail"}
+                      disabled={state?.type === "Detail" || loadingForm}
                     >
                       <Space direction="vertical">
-                        <Radio value={1}>Aktif</Radio>
-                        <Radio value={0}>Tidak Aktif</Radio>
+                        <Radio value={true}>Aktif</Radio>
+                        <Radio value={false}>Tidak Aktif</Radio>
                       </Space>
                     </Radio.Group>
-                  </Form.Item>
-                </div>
-              </div>
-            </Col>
-            <Col xs={24} md={12}>
-              <div className="flex flex-col text-primary1 gap-3">
-                <div>Foto Profile</div>
-                <div>
-                  <Form.Item
-                    help={validationImageType.help}
-                    validateStatus={validationImageType.status}
-                  >
-                    <Upload
-                      disabled={state?.type === "Detail"}
-                      listType="picture-card"
-                      showUploadList={false}
-                      onChange={handleChangeImage}
-                    >
-                      {base64 || urlImage ? (
-                        <img
-                          src={base64 !== null ? base64 : urlImage}
-                          alt="avatar"
-                          className="h-24 w-24 object-cover"
-                        />
-                      ) : (
-                        <div>
-                          <PlusOutlined />
-                        </div>
-                      )}
-                    </Upload>
                   </Form.Item>
                 </div>
               </div>
@@ -291,16 +328,17 @@ export default function DosenFormPage() {
               <Button
                 className="md:w-auto w-full"
                 onClick={() => navigate("/dosen")}
+                disabled={loadingForm}
               >
-                Cancel
+                Batal
               </Button>
               <Button
                 className="md:w-auto w-full"
                 htmlType="submit"
                 type="primary"
-                //   loading={loading}
+                loading={loadingForm}
               >
-                {state?.type}
+                {state?.type === "Create" ? "Buat" : "Edit"}
               </Button>
             </div>
           )}

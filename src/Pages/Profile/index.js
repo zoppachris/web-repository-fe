@@ -1,43 +1,10 @@
-import {
-  ArrowLeftOutlined,
-  UserOutlined,
-  UploadOutlined,
-} from "@ant-design/icons/lib/icons";
-import {
-  Avatar,
-  Button,
-  Col,
-  notification,
-  PageHeader,
-  Row,
-  Upload,
-} from "antd";
+import { ArrowLeftOutlined } from "@ant-design/icons/lib/icons";
+import { Col, PageHeader, Row } from "antd";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-
-  const handleChangeImage = (info) => {
-    const isJpgOrPng =
-      info.file.type === "image/jpeg" || info.file.type === "image/png";
-    const isSize = info.file.size < 204800;
-    if (!isJpgOrPng) {
-      notification.info({
-        message: "Upload gambar",
-        description: "Harap format berbentuk jpg, jpeg atau png",
-      });
-    }
-    if (!isSize) {
-      notification.info({
-        message: "Upload gambar",
-        description: "Harap upload gambar dibawah 200kb",
-      });
-    }
-    if (isJpgOrPng && isSize) {
-      console.log(info.file.originFileObj);
-    }
-  };
 
   return (
     <div className="flex flex-col">
@@ -58,13 +25,13 @@ export default function ProfilePage() {
           <Col span={24}>
             <Row>
               <Col xs={12} sm={8} md={4}>
-                {localStorage.getItem("roleScope") === "mahasiswa"
-                  ? "NIM"
-                  : "NIDN"}
+                {localStorage.getItem("roleName")?.toLowerCase() === "lecturer"
+                  ? "NIDN"
+                  : "NIM"}
               </Col>
               <Col span={2}>:</Col>
               <Col xs={10} sm={14} md={18}>
-                8809840017
+                {localStorage.getItem("userName")}
               </Col>
             </Row>
           </Col>
@@ -72,17 +39,17 @@ export default function ProfilePage() {
             <Row>
               <Col xs={12} sm={8} md={4}>
                 Nama{" "}
-                {localStorage.getItem("roleScope") === "mahasiswa"
-                  ? "Mahasiswa"
-                  : "Dosen"}
+                {localStorage.getItem("roleName").toLowerCase() === "lecturer"
+                  ? "Dosen"
+                  : "Mahasiswa"}
               </Col>
               <Col span={2}>:</Col>
               <Col xs={10} sm={14} md={18}>
-                Dr. Drs. H. Aji Komarudin, M.Si.
+                {localStorage.getItem("name")}
               </Col>
             </Row>
           </Col>
-          {localStorage.getItem("roleScope") === "mahasiswa" ? (
+          {localStorage.getItem("roleName").toLowerCase() === "student" ? (
             <>
               <Col span={24}>
                 <Row>
@@ -91,7 +58,7 @@ export default function ProfilePage() {
                   </Col>
                   <Col span={2}>:</Col>
                   <Col xs={10} sm={14} md={18}>
-                    Teknik Informatika
+                    {localStorage.getItem("majorName")}
                   </Col>
                 </Row>
               </Col>
@@ -115,12 +82,12 @@ export default function ProfilePage() {
                 </Col>
                 <Col span={2}>:</Col>
                 <Col xs={10} sm={14} md={18}>
-                  Fakultas Ilmu Komputer
+                  {localStorage.getItem("facultyName")}
                 </Col>
               </Row>
             </Col>
           )}
-          <Col span={24}>
+          {/* <Col span={24}>
             <Row>
               <Col xs={12} sm={8} md={4}>
                 Status
@@ -130,43 +97,7 @@ export default function ProfilePage() {
                 Aktif
               </Col>
             </Row>
-          </Col>
-          <Col span={24}>
-            <Row>
-              <Col xs={12} sm={8} md={4}>
-                Foto Profile
-              </Col>
-              <Col span={2}>:</Col>
-              <Col xs={10} sm={14} md={18}>
-                <Avatar
-                  shape="square"
-                  icon={<UserOutlined />}
-                  size={{
-                    xs: 100,
-                    sm: 150,
-                    md: 200,
-                    lg: 200,
-                    xl: 200,
-                    xxl: 200,
-                  }}
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                />
-                <Upload
-                  // disabled={state?.type === "Detail"}
-                  showUploadList={false}
-                  onChange={handleChangeImage}
-                >
-                  <Button icon={<UploadOutlined />} size="small">
-                    Ganti Foto Profile
-                  </Button>
-                </Upload>
-              </Col>
-            </Row>
-          </Col>
+          </Col> */}
         </Row>
       </div>
     </div>

@@ -1,60 +1,134 @@
-import { Popconfirm, Select, Table } from "antd";
+import { notification, Popconfirm, Select, Table } from "antd";
 import Search from "antd/lib/input/Search";
-import React, { useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import { API } from "../../../Services/axios";
 import JurusanForm from "./form";
 
 export default function JurusanPage() {
   const { Option } = Select;
+  const initialParams = {
+    size: 20,
+    page: 0,
+    sort: "",
+    search: "",
+    id: "",
+    fakultas: "",
+  };
   const [modalForm, setModalForm] = useState(false);
   const [formType, setFormType] = useState("Create");
   const [selectedItem, setSelectedItem] = useState({});
+  const [dataFaculties, setDataFaculties] = useState([]);
+  const [dataMajors, setDataMajors] = useState([]);
+  const [loadingTable, setLoadingTable] = useState(false);
+  const [params, setParams] = useState(initialParams);
+  const [meta, setMeta] = useState({ size: 20, page: 1, total: 0 });
+
+  const getFaculty = async () => {
+    await API(`faculty.getFaculty`, {
+      params: {
+        size: 999999,
+        page: 0,
+        sort: "",
+        search: "",
+        id: "",
+      },
+    })
+      .then((res) => {
+        if (res.status === 200 && res.data.status === "success") {
+          const { data } = res.data;
+          setDataFaculties(data?.content);
+        }
+      })
+      .catch((res) => {
+        notification.info({
+          message: "Gagal mendapatkan data",
+          description: "Data fakultas gagal didapatkan!",
+        });
+      });
+  };
+
+  const getMajor = useCallback(async () => {
+    setLoadingTable(true);
+    await API(`major.getMajor`, {
+      params,
+    })
+      .then((res) => {
+        setLoadingTable(false);
+        if (res.status === 200 && res.data.status === "success") {
+          const { data } = res.data;
+          const newData = data?.content.map((item, index) => {
+            return { key: index, ...item };
+          });
+          setDataMajors(newData);
+          setMeta({
+            size: data?.size,
+            page: data?.page + 1,
+            total: data?.totalElements,
+          });
+        }
+      })
+      .catch((res) => {
+        setLoadingTable(false);
+        notification.info({
+          message: "Gagal mendapatkan data",
+          description: "Data jurusan gagal didapatkan!",
+        });
+      });
+  }, [params]);
+
+  const deleteMajor = async (id) => {
+    await API(`major.deleteMajor`, { query: { id } })
+      .then((res) => {
+        setParams(initialParams);
+        if (res.status === 200 && res.data.status === "success") {
+          notification.success({
+            message: "Berhasil menghapus data",
+            description: "Data jurusan berhasil dihapus!",
+          });
+        } else {
+          notification.info({
+            message: "Gagal menghapus data",
+            description: "Data jurusan gagal dihapus!",
+          });
+        }
+      })
+      .catch((res) => {
+        notification.error({
+          message: "Gagal menghapus data",
+          description: "Data jurusan gagal dihapus!",
+        });
+      });
+  };
+
+  useEffect(() => {
+    getFaculty();
+  }, []);
+
+  useEffect(() => {
+    getMajor();
+  }, [getMajor]);
 
   const toogleModalForm = (type) => {
     setModalForm(!modalForm);
     setFormType(type);
   };
 
-  const dataSource = [
-    {
-      key: "1",
-      namaJurusan: "Teknik Informatika",
-      fakultasId: "1",
-      namaFakultas: "Fakultas Ilmu Komputer",
-    },
-    {
-      key: "2",
-      namaJurusan: "Manajemen Bisnis",
-      fakultasId: "2",
-      namaFakultas: "Fakultas Ekonomi",
-    },
-  ];
-
-  const dataFakultas = [
-    {
-      fakultasId: "1",
-      namaFakultas: "Fakultas Ilmu Komputer",
-    },
-    {
-      fakultasId: "2",
-      namaFakultas: "Fakultas Ekonomi",
-    },
-  ];
-
   const columns = [
     {
       title: "Nama Jurusan",
-      dataIndex: "namaJurusan",
-      key: "namaJurusan",
+      dataIndex: "majorName",
+      key: "majorName",
       width: 600,
     },
     {
       title: "Nama Fakultas",
-      dataIndex: "namaFakultas",
-      key: "namaFakultas",
+      dataIndex: "faculties",
+      key: "faculties.facultyName",
       width: 600,
+      render: (text) => text.facultyName,
     },
     {
-      title: "Action",
+      title: "Aksi",
       dataIndex: "",
       render: (record) => (
         <div className="text-primary1 md:flex-row flex-col flex gap-4 text-sm font-semibold">
@@ -65,14 +139,14 @@ export default function JurusanPage() {
               setSelectedItem(record);
             }}
           >
-            Update
+            Edit
           </div>
           <Popconfirm
             title="Hapus data ini?"
             placement="left"
-            onConfirm={() => console.log(record.key)}
+            onConfirm={() => deleteMajor(record.majorId)}
           >
-            <div className="cursor-pointer hover:opacity-80">Delete</div>
+            <div className="cursor-pointer hover:opacity-80">Hapus</div>
           </Popconfirm>
         </div>
       ),
@@ -80,16 +154,20 @@ export default function JurusanPage() {
   ];
 
   const handleTable = (pagination, filter, sorter) => {
-    console.log("pagination: ", pagination);
+    setParams({
+      ...params,
+      page: pagination.current - 1,
+      size: pagination.pageSize,
+    });
   };
 
   const onSearch = (value) => {
-    console.log("search", value);
+    setParams({
+      ...params,
+      page: 0,
+      search: value,
+    });
   };
-
-  //   const handleFakultas = (value) => {
-  //     setMajor(value);
-  //   };
 
   return (
     <div className="flex flex-col items-center">
@@ -108,9 +186,12 @@ export default function JurusanPage() {
             className="w-full"
             allowClear
             style={{ alignItems: "center" }}
+            onChange={(value) =>
+              setParams({ ...params, page: 0, fakultas: value || "" })
+            }
           >
-            {dataFakultas?.map((item) => (
-              <Option key={item.fakultasId}>{item.namaFakultas}</Option>
+            {dataFaculties?.map((item) => (
+              <Option key={item.facultyName}>{item.facultyName}</Option>
             ))}
           </Select>
         </div>
@@ -119,19 +200,20 @@ export default function JurusanPage() {
             className="w-full md:w-32 text-white bg-primary2 h-8 items-center justify-center flex cursor-pointer hover:opacity-90 px-4 rounded-sm"
             onClick={() => toogleModalForm("Create")}
           >
-            New Jurusan
+            + Buat Jurusan
           </div>
         </div>
       </div>
       <div className="md:mt-30 mt-5 w-full">
         <Table
-          dataSource={dataSource}
+          loading={loadingTable}
+          dataSource={dataMajors}
           columns={columns}
           onChange={handleTable}
           pagination={{
-            current: 1,
-            pageSize: 20,
-            total: 85,
+            current: meta.page,
+            pageSize: meta.size,
+            total: meta.total,
             responsive: true,
             pageSizeOptions: ["20", "50", "100"],
             showSizeChanger: true,
@@ -145,10 +227,13 @@ export default function JurusanPage() {
       </div>
       <JurusanForm
         data={selectedItem}
-        dataFakultas={dataFakultas}
+        dataFaculties={dataFaculties}
         type={formType}
         visible={modalForm}
-        onOk={toogleModalForm}
+        onOk={() => {
+          toogleModalForm();
+          setParams(initialParams);
+        }}
         onCancel={() => {
           toogleModalForm();
           setSelectedItem({});
