@@ -40,7 +40,7 @@ const ModalChangePassword = ({ visible, onClose }) => {
 
   return (
     <Modal
-      title={<div className="text-primary1 font-semibold text-base">Login</div>}
+      title={<div className="text-primary1 font-semibold text-base">Ganti Password</div>}
       visible={visible}
       onCancel={() => {
         onClose();
