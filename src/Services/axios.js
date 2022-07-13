@@ -26,7 +26,10 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    if (error?.response?.status === 401) {
+    if (
+      error?.response?.status === 401 ||
+      error?.name?.toLowerCase() === "axioserror"
+    ) {
       localStorage.clear();
       Modal.info({
         title: "Sesi login telah habis!",
