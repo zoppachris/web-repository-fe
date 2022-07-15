@@ -87,7 +87,7 @@ export default function MahasiswaPage() {
         } else {
           notification.info({
             message: "Gagal menghapus data",
-            description: "Data mahasiswa gagal dihapus!",
+            description: "Pastikan data tidak terhubung ke data lainnya!",
           });
         }
       })

@@ -99,7 +99,8 @@ export default function DosenFormPage() {
         } else {
           notification.info({
             message: "Gagal membuat data",
-            description: "Data dosen gagal dibuat!",
+            description:
+              "Data dengan NIDN yang sama telah ada, harap ganti NIDN!",
           });
         }
       })
@@ -129,7 +130,8 @@ export default function DosenFormPage() {
         } else {
           notification.info({
             message: "Gagal memperbarui data",
-            description: "Data dosen gagal diperbarui!",
+            description:
+              "Data dengan NIDN yang sama telah ada, harap ganti NIDN!",
           });
         }
       })

@@ -61,7 +61,7 @@ export default function FakultasPage() {
         } else {
           notification.info({
             message: "Gagal menghapus data",
-            description: "Data fakultas gagal dihapus!",
+            description: "Pastikan data tidak terhubung ke data lainnya!",
           });
         }
       })

@@ -72,7 +72,8 @@ export default function AdminFormPage() {
         } else {
           notification.info({
             message: "Gagal membuat data",
-            description: "Data admin gagal dibuat!",
+            description:
+              "Data dengan username yang sama telah ada, harap ganti username!",
           });
         }
       })
@@ -102,7 +103,8 @@ export default function AdminFormPage() {
         } else {
           notification.info({
             message: "Gagal memperbarui data",
-            description: "Data admin gagal diperbarui!",
+            description:
+              "Data dengan username yang sama telah ada, harap ganti username!",
           });
         }
       })

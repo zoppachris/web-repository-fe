@@ -104,7 +104,8 @@ export default function MahasiswaFormPage() {
         } else {
           notification.info({
             message: "Gagal membuat data",
-            description: "Data mahasiswa gagal dibuat!",
+            description:
+              "Data dengan NIM yang sama telah ada, harap ganti NIM!",
           });
         }
       })
@@ -134,7 +135,8 @@ export default function MahasiswaFormPage() {
         } else {
           notification.info({
             message: "Gagal memperbarui data",
-            description: "Data mahasiswa gagal diperbarui!",
+            description:
+              "Data dengan NIM yang sama telah ada, harap ganti NIM!",
           });
         }
       })

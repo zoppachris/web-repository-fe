@@ -88,7 +88,7 @@ export default function JurusanPage() {
         } else {
           notification.info({
             message: "Gagal menghapus data",
-            description: "Data jurusan gagal dihapus!",
+            description: "Pastikan data tidak terhubung ke data lainnya!",
           });
         }
       })

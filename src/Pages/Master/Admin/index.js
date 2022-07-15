@@ -60,7 +60,7 @@ export default function AdminPage() {
         } else {
           notification.info({
             message: "Gagal menghapus data",
-            description: "Data admin gagal dihapus!",
+            description: "Pastikan data tidak terhubung ke data lainnya!",
           });
         }
       })

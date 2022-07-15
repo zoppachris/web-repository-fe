@@ -60,7 +60,7 @@ export default function DosenPage() {
         } else {
           notification.info({
             message: "Gagal menghapus data",
-            description: "Data dosen gagal dihapus!",
+            description: "Pastikan data tidak terhubung ke data lainnya!",
           });
         }
       })
