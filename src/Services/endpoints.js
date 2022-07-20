@@ -126,6 +126,10 @@ const endPoints = {
       method: "put",
       url: "/api/upload",
     },
+    downloadFile: {
+      method: "get",
+      url: "/api/download",
+    },
   },
 };
 

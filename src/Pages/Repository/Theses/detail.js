@@ -1,5 +1,5 @@
 import { ArrowLeftOutlined, FileOutlined } from "@ant-design/icons/lib/icons";
-import { notification, PageHeader } from "antd";
+import { Modal, notification, PageHeader, Spin } from "antd";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { API } from "../../../Services/axios";
@@ -8,10 +8,64 @@ export default function ThesesDetailPage() {
   const navigate = useNavigate();
   const { thesesId } = useParams();
   const [detailTheses, setDetailTheses] = useState({});
+  const [loadingDownload, setLoadingDownload] = useState(false);
 
   useEffect(() => {
     getThesesDetail();
+    checkExpireUser();
   }, []);
+
+  const reloadPage = () => {
+    setTimeout(() => {
+      window.location.reload(false);
+    }, 500);
+  };
+
+  const checkExpireUser = () => {
+    const expire = parseInt(localStorage.getItem("expire"));
+    const currentTime = Math.round(Date.now() / 1000);
+
+    if (currentTime > expire) {
+      localStorage.clear();
+      Modal.info({
+        title: "Sesi login telah habis!",
+        content: "Harap login kembali",
+        centered: true,
+        maskClosable: true,
+        onCancel: () => reloadPage(),
+        onOk: () => reloadPage(),
+      });
+    }
+  };
+
+  const downloadFile = async (fileUrl) => {
+    setLoadingDownload(true);
+    await API(`theses.downloadFile`, {
+      params: {
+        filename: fileUrl,
+      },
+      responseType: "blob",
+    })
+      .then((res) => {
+        setLoadingDownload(false);
+        if (res.status === 200 && res.data) {
+          const url = window.URL.createObjectURL(new Blob([res.data]));
+          const link = document.createElement("a");
+          link.href = url;
+          link.setAttribute("download", fileUrl);
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+        }
+      })
+      .catch((res) => {
+        setLoadingDownload(false);
+        notification.error({
+          message: "Gagal download file",
+          description: "File tugas akhir gagal untuk di download!",
+        });
+      });
+  };
 
   const getThesesDetail = async () => {
     await API(`theses.getTheses`, {
@@ -40,11 +94,10 @@ export default function ThesesDetailPage() {
   };
 
   const openUrl = () => {
-    window.open(
-      detailTheses?.fullDocumentPath
-        ? detailTheses?.fullDocumentPath
-        : detailTheses?.partialDocumentPath,
-      "_blank"
+    downloadFile(
+      detailTheses?.fullDocumentUrl
+        ? detailTheses?.fullDocumentUrl
+        : detailTheses?.partialDocumentUrl
     );
   };
 
@@ -92,8 +145,12 @@ export default function ThesesDetailPage() {
           <div className="text-primary1 font-semibold text-xl">
             Download File
           </div>
-          <div className="text-2xl text-primary1 cursor-pointer">
-            <FileOutlined onClick={openUrl} />
+          <div className="text-2xl text-primary1">
+            {loadingDownload ? (
+              <Spin size="small" />
+            ) : (
+              <FileOutlined onClick={openUrl} className="cursor-pointer" />
+            )}
           </div>
         </div>
       </div>

@@ -157,12 +157,12 @@ export default function ThesesFormPage() {
           if (type === "thesesPartial") {
             notification.info({
               message: "Gagal upload file",
-              description: "File skripsi partial gagal untuk di upload!",
+              description: "File tugas akhir partial gagal untuk di upload!",
             });
           } else {
             notification.info({
               message: "Gagal upload file",
-              description: "File skripsi full gagal untuk di upload!",
+              description: "File tugas akhir full gagal untuk di upload!",
             });
           }
         });
@@ -532,7 +532,7 @@ export default function ThesesFormPage() {
             </Col>
             <Col xs={24} md={12}>
               <div className="flex flex-col text-primary1 gap-3">
-                <div>Skripsi Bab 1</div>
+                <div>Tugas Akhir Sebagian</div>
                 <div>
                   <Form.Item
                     help={validationSkripsi.help}
@@ -569,7 +569,7 @@ export default function ThesesFormPage() {
             </Col>
             <Col xs={24} md={12}>
               <div className="flex flex-col text-primary1 gap-3">
-                <div>Skripsi Full</div>
+                <div>Tugas Akhir Full</div>
                 <div>
                   <Form.Item
                     help={validationSkripsiFull.help}
