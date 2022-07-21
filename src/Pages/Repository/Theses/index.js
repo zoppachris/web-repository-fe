@@ -128,15 +128,24 @@ export default function ThesesPage() {
       key: "thesesTitle",
     },
     {
-      title: "Jurusan",
-      dataIndex: "students",
-      key: "students.majors.majorName",
-      render: (text) => text.majors?.majorName,
-    },
-    {
       title: "Tahun",
       dataIndex: "year",
       key: "year",
+      width: 100,
+    },
+    {
+      title: "Jurusan",
+      dataIndex: "students",
+      key: "students.majors.majorName",
+      width: 150,
+      ellipsis: true,
+      render: (text) => text.majors?.majorName,
+    },
+    {
+      title: "Kata Kunci",
+      dataIndex: "keywords",
+      key: "keywords",
+      ellipsis: true,
     },
   ];
 
@@ -145,8 +154,9 @@ export default function ThesesPage() {
     {
       title: "Aksi",
       dataIndex: "",
+      width: 200,
       render: (record) => (
-        <div className="text-primary1 md:flex-row flex-col flex gap-4 text-sm font-semibold">
+        <div className="text-primary1 flex gap-4 text-sm font-semibold">
           <div
             className="cursor-pointer hover:opacity-80"
             onClick={() => handleDetail(record)}
@@ -217,7 +227,7 @@ export default function ThesesPage() {
       <div className="md:mt-14 bg-primary1 rounded-xl w-full px-14 py-9 flex md:flex-row flex-col justify-center items-start gap-5">
         <div className="w-full">
           <Input
-            placeholder="Cari Judul"
+            placeholder="Cari Judul, Abstrak atau Kata Kunci"
             allowClear
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -283,6 +293,7 @@ export default function ThesesPage() {
         }
       >
         <Table
+          scroll={{ x: 1200 }}
           loading={loadingTable}
           dataSource={dataTheses}
           columns={

@@ -537,6 +537,7 @@ export default function ThesesFormPage() {
                   <Form.Item
                     help={validationSkripsi.help}
                     validateStatus={validationSkripsi.status}
+                    extra="Upload file dengan format PDF dan ukuran maksimal 5mb"
                   >
                     <Upload
                       disabled={state?.type === "Detail"}
@@ -574,6 +575,7 @@ export default function ThesesFormPage() {
                   <Form.Item
                     help={validationSkripsiFull.help}
                     validateStatus={validationSkripsiFull.status}
+                    extra="Upload file dengan format PDF dan ukuran maksimal 15mb"
                   >
                     <Upload
                       disabled={state?.type === "Detail"}

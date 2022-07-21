@@ -97,7 +97,7 @@ export default function DosenPage() {
       title: "Aksi",
       dataIndex: "",
       render: (record) => (
-        <div className="text-primary1 md:flex-row flex-col flex gap-4 text-sm font-semibold">
+        <div className="text-primary1 flex gap-4 text-sm font-semibold">
           <div
             className="cursor-pointer hover:opacity-80"
             onClick={() => handleRow("Detail", record.lectureId)}
