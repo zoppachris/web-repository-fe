@@ -1,5 +1,5 @@
 import { ArrowLeftOutlined, FileOutlined } from "@ant-design/icons/lib/icons";
-import { Modal, notification, PageHeader, Spin } from "antd";
+import { Modal, notification, PageHeader, Skeleton, Spin } from "antd";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { API } from "../../../Services/axios";
@@ -8,6 +8,7 @@ export default function ThesesDetailPage() {
   const navigate = useNavigate();
   const { thesesId } = useParams();
   const [detailTheses, setDetailTheses] = useState({});
+  const [loading, setLoading] = useState(false);
   const [loadingDownload, setLoadingDownload] = useState(false);
 
   useEffect(() => {
@@ -68,6 +69,7 @@ export default function ThesesDetailPage() {
   };
 
   const getThesesDetail = async () => {
+    setLoading(true);
     await API(`theses.getTheses`, {
       params: {
         size: "",
@@ -80,12 +82,14 @@ export default function ThesesDetailPage() {
       },
     })
       .then((res) => {
+        setLoading(false);
         if (res.status === 200 && res.data.status === "success") {
           const { data } = res.data;
           setDetailTheses(data);
         }
       })
       .catch((res) => {
+        setLoading(false);
         notification.info({
           message: "Gagal mendapatkan data",
           description: "Data detail dosen gagal didapatkan!",
@@ -115,45 +119,57 @@ export default function ThesesDetailPage() {
           <div className="text-primary1 font-semibold text-xl">Kembali</div>
         }
       />
-      <div className="mt-4 gap-9 flex flex-col text-justify">
-        <div className="mt-4 gap-4 flex flex-col">
-          <div className="text-primary1 font-semibold text-xl">Judul</div>
-          <div className="text-lg">{detailTheses?.thesesTitle}</div>
-        </div>
-        <div className="mt-4 gap-4 flex flex-col">
-          <div className="text-primary1 font-semibold text-xl">Tahun</div>
-          <div className="text-lg">{detailTheses?.year}</div>
-        </div>
-        <div className="mt-4 gap-4 flex flex-col">
-          <div className="text-primary1 font-semibold text-xl">Abstrak</div>
-          <div className="text-lg">{detailTheses?.abstracts}</div>
-        </div>
-        <div className="mt-4 gap-4 flex flex-col">
-          <div className="text-primary1 font-semibold text-xl">Kata Kunci</div>
-          <div className="text-lg">{detailTheses?.keywords}</div>
-        </div>
-        <div className="mt-4 gap-4 flex flex-col">
-          <div className="text-primary1 font-semibold text-xl">Mahasiswa</div>
-          <div className="text-lg">
-            {detailTheses?.students?.studentName} |{" "}
-            {detailTheses?.students?.majors?.majorName} |{" "}
-            {detailTheses?.students?.majors?.faculties?.facultyName} | Angkatan{" "}
-            {detailTheses?.students?.year}
+      {loading ? (
+        <>
+          <Skeleton loading={loading} active />
+          <Skeleton loading={loading} active />
+          <Skeleton loading={loading} active />
+          <Skeleton loading={loading} active />
+          <Skeleton loading={loading} active />
+        </>
+      ) : (
+        <div className="mt-4 gap-9 flex flex-col text-justify">
+          <div className="mt-4 gap-4 flex flex-col">
+            <div className="text-primary1 font-semibold text-xl">Judul</div>
+            <div className="text-lg">{detailTheses?.thesesTitle}</div>
+          </div>
+          <div className="mt-4 gap-4 flex flex-col">
+            <div className="text-primary1 font-semibold text-xl">Tahun</div>
+            <div className="text-lg">{detailTheses?.year}</div>
+          </div>
+          <div className="mt-4 gap-4 flex flex-col">
+            <div className="text-primary1 font-semibold text-xl">Abstrak</div>
+            <div className="text-lg">{detailTheses?.abstracts}</div>
+          </div>
+          <div className="mt-4 gap-4 flex flex-col">
+            <div className="text-primary1 font-semibold text-xl">
+              Kata Kunci
+            </div>
+            <div className="text-lg">{detailTheses?.keywords}</div>
+          </div>
+          <div className="mt-4 gap-4 flex flex-col">
+            <div className="text-primary1 font-semibold text-xl">Mahasiswa</div>
+            <div className="text-lg">
+              {detailTheses?.students?.studentName} |{" "}
+              {detailTheses?.students?.majors?.majorName} |{" "}
+              {detailTheses?.students?.majors?.faculties?.facultyName} |
+              Angkatan {detailTheses?.students?.year}
+            </div>
+          </div>
+          <div className="mt-4 gap-4 flex flex-col">
+            <div className="text-primary1 font-semibold text-xl">
+              Download File
+            </div>
+            <div className="text-2xl text-primary1">
+              {loadingDownload ? (
+                <Spin size="small" />
+              ) : (
+                <FileOutlined onClick={openUrl} className="cursor-pointer" />
+              )}
+            </div>
           </div>
         </div>
-        <div className="mt-4 gap-4 flex flex-col">
-          <div className="text-primary1 font-semibold text-xl">
-            Download File
-          </div>
-          <div className="text-2xl text-primary1">
-            {loadingDownload ? (
-              <Spin size="small" />
-            ) : (
-              <FileOutlined onClick={openUrl} className="cursor-pointer" />
-            )}
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
