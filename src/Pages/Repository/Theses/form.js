@@ -30,14 +30,13 @@ export default function ThesesFormPage() {
   const { Option } = Select;
   const { TextArea } = Input;
   const { state } = useLocation();
+  const [loadingDownload, setLoadingDownload] = useState(false);
   const [loadingForm, setLoadingForm] = useState(false);
   const [loadingStudent, setLoadingStudent] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState({});
   const [dataStudents, setDataStudents] = useState([]);
   const [thesesPartialUrl, setThesesPartialUrl] = useState("");
   const [thesesFullUrl, setThesesFullUrl] = useState("");
-  const [thesesPartialPath, setThesesPartialPath] = useState("");
-  const [thesesFullPath, setThesesFullPath] = useState("");
   const [fileBase64, setFileBase64] = useState(null);
   const [fileFullBase64, setFileFullBase64] = useState(null);
   const [validationSkripsi, setValidationSkripsi] = useState({
@@ -55,6 +54,35 @@ export default function ThesesFormPage() {
     }
   }, []);
 
+  const downloadFile = async (fileUrl) => {
+    setLoadingDownload(true);
+    await API(`theses.downloadFile`, {
+      params: {
+        filename: fileUrl,
+      },
+      responseType: "blob",
+    })
+      .then((res) => {
+        setLoadingDownload(false);
+        if (res.status === 200 && res.data) {
+          const url = window.URL.createObjectURL(new Blob([res.data]));
+          const link = document.createElement("a");
+          link.href = url;
+          link.setAttribute("download", fileUrl);
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+        }
+      })
+      .catch((res) => {
+        setLoadingDownload(false);
+        notification.error({
+          message: "Gagal download file",
+          description: "File tugas akhir gagal untuk di download!",
+        });
+      });
+  };
+
   const getThesesDetail = async () => {
     await API(`theses.getTheses`, {
       params: {
@@ -70,8 +98,6 @@ export default function ThesesFormPage() {
       .then((res) => {
         if (res.status === 200 && res.data.status === "success") {
           const { data } = res.data;
-          setThesesPartialPath(data?.partialDocumentPath);
-          setThesesFullPath(data?.fullDocumentPath);
           setThesesPartialUrl(data?.partialDocumentUrl);
           setThesesFullUrl(data?.fullDocumentUrl);
           setDataStudents([data?.students]);
@@ -548,18 +574,22 @@ export default function ThesesFormPage() {
                     >
                       <Button icon={<UploadOutlined />}>Upload</Button>
                     </Upload>
-                    {fileBase64 !== null || thesesPartialPath !== "" ? (
-                      <div className="text-2xl text-primary1 cursor-pointer flex flex-row mt-2 gap-3 items-center">
+                    {fileBase64 !== null || thesesPartialUrl !== "" ? (
+                      <div className="text-2xl text-primary1 flex flex-row mt-2 gap-3 items-center">
                         <FileOutlined />
-                        <div
-                          className="text-sm hover:opacity-80"
-                          onClick={() =>
-                            fileBase64 === null &&
-                            window.open(thesesPartialPath, "_blank")
-                          }
-                        >
-                          {fileBase64?.name || "Download File"}
-                        </div>
+                        {loadingDownload && fileBase64 === null ? (
+                          <Spin size="little" />
+                        ) : (
+                          <div
+                            className="text-sm cursor-pointer hover:opacity-80"
+                            onClick={() =>
+                              fileBase64 === null &&
+                              downloadFile(thesesPartialUrl)
+                            }
+                          >
+                            {fileBase64?.name || "Download File"}
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <></>
@@ -586,18 +616,22 @@ export default function ThesesFormPage() {
                     >
                       <Button icon={<UploadOutlined />}>Upload</Button>
                     </Upload>
-                    {fileFullBase64 !== null || thesesFullPath !== "" ? (
-                      <div className="text-2xl text-primary1 cursor-pointer flex flex-row mt-2 gap-3 items-center">
+                    {fileFullBase64 !== null || thesesFullUrl !== "" ? (
+                      <div className="text-2xl text-primary1 flex flex-row mt-2 gap-3 items-center">
                         <FileOutlined />
-                        <div
-                          className="text-sm hover:opacity-80"
-                          onClick={() =>
-                            fileFullBase64 === null &&
-                            window.open(thesesFullPath, "_blank")
-                          }
-                        >
-                          {fileFullBase64?.name || "Download File"}
-                        </div>
+                        {loadingDownload && fileFullBase64 === null ? (
+                          <Spin size="little" />
+                        ) : (
+                          <div
+                            className="text-sm cursor-pointer hover:opacity-80"
+                            onClick={() =>
+                              fileFullBase64 === null &&
+                              downloadFile(thesesFullUrl)
+                            }
+                          >
+                            {fileFullBase64?.name || "Download File"}
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <></>
