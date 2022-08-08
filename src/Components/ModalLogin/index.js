@@ -32,6 +32,10 @@ const ModalLogin = ({ visible, onClose }) => {
           localStorage.setItem("token", data?.token);
           localStorage.setItem("tokenType", data?.type);
           localStorage.setItem("expire", data?.expire);
+          localStorage.setItem(
+            "thesesId",
+            data?.thesesId === null ? "" : data?.thesesId
+          );
           reloadPage();
         } else {
           Modal.info({

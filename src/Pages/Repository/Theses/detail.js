@@ -109,7 +109,7 @@ export default function ThesesDetailPage() {
     <div className="flex flex-col">
       <PageHeader
         style={{ padding: 0, margin: 0 }}
-        onBack={() => navigate("/repository")}
+        onBack={() => navigate(-1)}
         backIcon={
           <div className="text-primaryVariant">
             <ArrowLeftOutlined />

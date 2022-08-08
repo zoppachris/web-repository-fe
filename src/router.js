@@ -15,6 +15,7 @@ import MahasiswaFormPage from "./Pages/Master/Mahasiswa/form";
 import ProfilePage from "./Pages/Profile";
 import AdminPage from "./Pages/Master/Admin";
 import AdminFormPage from "./Pages/Master/Admin/form";
+import RepositoryUserPage from "./Pages/Repository/RepositoryUser";
 
 const { Content } = Layout;
 
@@ -31,6 +32,19 @@ export default function Router() {
               path="/detail-theses/:thesesId"
               element={<ThesesDetailPage />}
             />
+            {localStorage.getItem("roleName")?.toLowerCase() === "student" && (
+              <>
+                <Route
+                  path="/repository-user"
+                  element={<RepositoryUserPage />}
+                />
+                <Route path="/theses-form" element={<ThesesFormPage />} />
+                <Route
+                  path="/theses-form/:thesesId"
+                  element={<ThesesFormPage />}
+                />
+              </>
+            )}
             {localStorage
               .getItem("roleName")
               ?.toLowerCase()

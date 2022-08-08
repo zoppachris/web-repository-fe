@@ -88,6 +88,10 @@ export default function Nav() {
       label: localStorage.getItem("userName"),
       disabled: true,
     },
+    localStorage.getItem("roleName")?.toLowerCase().includes("student") && {
+      key: "repository-user",
+      label: "Repository User",
+    },
     {
       key: "profile",
       label: "Detail Profil",
@@ -118,7 +122,7 @@ export default function Nav() {
     },
     localStorage.getItem("roleName") && {
       key: "profile-user",
-      label: "Profile",
+      label: "Profil",
       children: userItems.filter((item) => item.key !== "logout"),
     },
     !localStorage.getItem("roleName")

@@ -51,6 +51,8 @@ export default function ThesesFormPage() {
   useEffect(() => {
     if (state?.type !== "Create" && thesesId) {
       getThesesDetail();
+    } else if (localStorage.getItem("roleName")?.toLowerCase() === "student") {
+      getStudent(localStorage.getItem("name"));
     }
   }, []);
 
@@ -134,6 +136,10 @@ export default function ThesesFormPage() {
         search: val,
         id: "",
         jurusan: "",
+        hasTheses:
+          localStorage.getItem("roleName")?.toLowerCase() === "student"
+            ? ""
+            : false,
       },
     })
       .then((res) => {
@@ -141,6 +147,15 @@ export default function ThesesFormPage() {
         if (res.status === 200 && res.data.status === "success") {
           const { data } = res.data;
           setDataStudents(data?.content);
+          if (localStorage.getItem("roleName")?.toLowerCase() === "student") {
+            setSelectedStudent(data?.content[0]);
+            const setData = () => {
+              form.setFieldsValue({
+                studentId: data?.content[0]?.studentId.toString(),
+              });
+            };
+            setData();
+          }
         }
       })
       .catch((res) => {
@@ -206,7 +221,11 @@ export default function ThesesFormPage() {
             message: "Berhasil membuat data",
             description: "Data tugas akhir berhasil dibuat!",
           });
-          navigate("/repository");
+          if (localStorage.getItem("roleName")?.toLowerCase() === "student") {
+            localStorage.clear();
+          } else {
+            navigate(-1);
+          }
         } else {
           notification.info({
             message: "Gagal membuat data",
@@ -224,6 +243,7 @@ export default function ThesesFormPage() {
   };
 
   const updateTheses = (values) => {
+    delete values.students;
     API(`theses.updateTheses`, {
       data: values,
       query: { id: thesesId },
@@ -235,7 +255,7 @@ export default function ThesesFormPage() {
             message: "Berhasil memperbarui data",
             description: "Data tugas akhir berhasil diperbarui!",
           });
-          navigate("/repository");
+          navigate(-1);
         } else {
           notification.info({
             message: "Gagal memperbarui data",
@@ -402,7 +422,7 @@ export default function ThesesFormPage() {
     <div className="flex flex-col">
       <PageHeader
         style={{ padding: 0, margin: 0 }}
-        onBack={() => navigate("/repository")}
+        onBack={() => navigate(-1)}
         backIcon={
           <div className="text-primaryVariant">
             <ArrowLeftOutlined />
@@ -522,14 +542,17 @@ export default function ThesesFormPage() {
                       allowClear
                       style={{ alignItems: "center" }}
                       disabled={
-                        state?.type === "Detail" || state?.type === "Update"
+                        state?.type === "Detail" ||
+                        state?.type === "Update" ||
+                        localStorage.getItem("roleName")?.toLowerCase() ===
+                          "student"
                       }
                       onChange={onChangeStudent}
                     >
                       {dataStudents?.map((item) => (
                         <Option key={item.studentId}>
                           {item.nim} - {item.studentName} -{" "}
-                          {item.majors.majorName}
+                          {item.majors?.majorName}
                         </Option>
                       ))}
                     </Select>
@@ -646,7 +669,7 @@ export default function ThesesFormPage() {
             <div className="flex md:flex-row flex-col-reverse md:gap-10 gap-5 md:justify-end items-center">
               <Button
                 className="md:w-auto w-full"
-                onClick={() => navigate("/repository")}
+                onClick={() => navigate(-1)}
                 disabled={loadingForm}
               >
                 Batal
