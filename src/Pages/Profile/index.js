@@ -2,6 +2,7 @@ import { ArrowLeftOutlined } from "@ant-design/icons/lib/icons";
 import { Col, PageHeader, Row } from "antd";
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { GlobalFunctions } from "../../GlobalFunctions";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -25,13 +26,14 @@ export default function ProfilePage() {
           <Col span={24}>
             <Row>
               <Col xs={12} sm={8} md={4}>
-                {localStorage.getItem("roleName")?.toLowerCase() === "lecturer"
+                {GlobalFunctions.decrypt("roleName")?.toLowerCase() ===
+                "lecturer"
                   ? "NIDN"
                   : "NIM"}
               </Col>
               <Col span={2}>:</Col>
               <Col xs={10} sm={14} md={18}>
-                {localStorage.getItem("userName")}
+                {GlobalFunctions.decrypt("username")}
               </Col>
             </Row>
           </Col>
@@ -39,17 +41,18 @@ export default function ProfilePage() {
             <Row>
               <Col xs={12} sm={8} md={4}>
                 Nama{" "}
-                {localStorage.getItem("roleName").toLowerCase() === "lecturer"
+                {GlobalFunctions.decrypt("roleName").toLowerCase() ===
+                "lecturer"
                   ? "Dosen"
                   : "Mahasiswa"}
               </Col>
               <Col span={2}>:</Col>
               <Col xs={10} sm={14} md={18}>
-                {localStorage.getItem("name")}
+                {GlobalFunctions.decrypt("name")}
               </Col>
             </Row>
           </Col>
-          {localStorage.getItem("roleName").toLowerCase() === "student" ? (
+          {GlobalFunctions.decrypt("roleName").toLowerCase() === "student" ? (
             <>
               <Col span={24}>
                 <Row>
@@ -58,7 +61,7 @@ export default function ProfilePage() {
                   </Col>
                   <Col span={2}>:</Col>
                   <Col xs={10} sm={14} md={18}>
-                    {localStorage.getItem("majorName")}
+                    {GlobalFunctions.decrypt("majorName")}
                   </Col>
                 </Row>
               </Col>
@@ -82,7 +85,7 @@ export default function ProfilePage() {
                 </Col>
                 <Col span={2}>:</Col>
                 <Col xs={10} sm={14} md={18}>
-                  {localStorage.getItem("facultyName")}
+                  {GlobalFunctions.decrypt("facultyName")}
                 </Col>
               </Row>
             </Col>

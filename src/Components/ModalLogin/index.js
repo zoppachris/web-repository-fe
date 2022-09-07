@@ -1,16 +1,11 @@
 import { Input, Form, Modal, Button, notification } from "antd";
 import React, { useState } from "react";
+import { GlobalFunctions } from "../../GlobalFunctions";
 import { API } from "../../Services/axios";
 
 const ModalLogin = ({ visible, onClose }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-
-  const reloadPage = () => {
-    setTimeout(() => {
-      window.location.reload(false);
-    }, 500);
-  };
 
   const login = async (data) => {
     setLoading(true);
@@ -24,19 +19,20 @@ const ModalLogin = ({ visible, onClose }) => {
             description: "Login telah berhasil!",
           });
           onClose();
-          localStorage.setItem("roleName", data?.roleName);
-          localStorage.setItem("userName", data?.username);
-          localStorage.setItem("majorName", data?.majorName);
-          localStorage.setItem("facultyName", data?.facultyName);
-          localStorage.setItem("name", data?.name);
+          // localStorage.setItem("roleName", data?.roleName);
+          // localStorage.setItem("userName", data?.username);
+          // localStorage.setItem("majorName", data?.majorName);
+          // localStorage.setItem("facultyName", data?.facultyName);
+          // localStorage.setItem("name", data?.name);
+          // localStorage.setItem("expire", data?.expire);
+          // localStorage.setItem(
+          //   "thesesId",
+          //   data?.thesesId === null ? "" : data?.thesesId
+          // );
           localStorage.setItem("token", data?.token);
           localStorage.setItem("tokenType", data?.type);
-          localStorage.setItem("expire", data?.expire);
-          localStorage.setItem(
-            "thesesId",
-            data?.thesesId === null ? "" : data?.thesesId
-          );
-          reloadPage();
+          GlobalFunctions.encrypt(data);
+          GlobalFunctions.reloadPage();
         } else {
           Modal.info({
             title: "NIM/NIDN atau Password yang dimasukkan salah!",

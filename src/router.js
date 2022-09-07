@@ -16,6 +16,7 @@ import ProfilePage from "./Pages/Profile";
 import AdminPage from "./Pages/Master/Admin";
 import AdminFormPage from "./Pages/Master/Admin/form";
 import RepositoryUserPage from "./Pages/Repository/RepositoryUser";
+import { GlobalFunctions } from "./GlobalFunctions";
 
 const { Content } = Layout;
 
@@ -32,7 +33,8 @@ export default function Router() {
               path="/detail-theses/:thesesId"
               element={<ThesesDetailPage />}
             />
-            {localStorage.getItem("roleName")?.toLowerCase() === "student" && (
+            {GlobalFunctions.decrypt("roleName")?.toLowerCase() ===
+              "student" && (
               <>
                 <Route
                   path="/repository-user"
@@ -45,8 +47,7 @@ export default function Router() {
                 />
               </>
             )}
-            {localStorage
-              .getItem("roleName")
+            {GlobalFunctions.decrypt("roleName")
               ?.toLowerCase()
               .includes("admin") && (
               <>
@@ -63,7 +64,7 @@ export default function Router() {
                   path="/dosen-form/:dosenId"
                   element={<DosenFormPage />}
                 />
-                {localStorage.getItem("roleName")?.toLowerCase() ===
+                {GlobalFunctions.decrypt("roleName")?.toLowerCase() ===
                   "super admin" && (
                   <>
                     <Route path="/admin" element={<AdminPage />} />
@@ -82,7 +83,7 @@ export default function Router() {
                 />
               </>
             )}
-            {localStorage.getItem("roleName") && (
+            {GlobalFunctions.decrypt("roleName") && (
               <Route path="/profile" element={<ProfilePage />} />
             )}
             <Route

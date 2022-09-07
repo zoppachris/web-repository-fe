@@ -2,6 +2,7 @@ import { CloseOutlined, MenuOutlined, UserOutlined } from "@ant-design/icons";
 import { Avatar, Drawer, Dropdown, Menu } from "antd";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { GlobalFunctions } from "../../GlobalFunctions";
 import ModalChangePassword from "../ModalChangePassword";
 import ModalLogin from "../ModalLogin";
 
@@ -63,7 +64,7 @@ export default function Nav() {
       key: "jurusan",
       label: "Jurusan",
     },
-    localStorage.getItem("roleName")?.toLowerCase() === "super admin" && {
+    GlobalFunctions.decrypt("roleName")?.toLowerCase() === "super admin" && {
       key: "admin",
       label: "Admin",
     },
@@ -80,15 +81,15 @@ export default function Nav() {
   const userItems = [
     {
       key: "name",
-      label: localStorage.getItem("name"),
+      label: GlobalFunctions.decrypt("name"),
       disabled: true,
     },
     {
       key: "userName",
-      label: localStorage.getItem("userName"),
+      label: GlobalFunctions.decrypt("username"),
       disabled: true,
     },
-    localStorage.getItem("roleName")?.toLowerCase().includes("student") && {
+    GlobalFunctions.decrypt("roleName")?.toLowerCase().includes("student") && {
       key: "repository-user",
       label: "Repository User",
     },
@@ -111,7 +112,7 @@ export default function Nav() {
       key: "/",
       label: "Beranda",
     },
-    localStorage.getItem("roleName")?.toLowerCase().includes("admin") && {
+    GlobalFunctions.decrypt("roleName")?.toLowerCase().includes("admin") && {
       key: "master",
       label: "Master",
       children: menuItems,
@@ -120,12 +121,12 @@ export default function Nav() {
       key: "repository",
       label: "Repository",
     },
-    localStorage.getItem("roleName") && {
+    GlobalFunctions.decrypt("roleName") && {
       key: "profile-user",
       label: "Profil",
       children: userItems.filter((item) => item.key !== "logout"),
     },
-    !localStorage.getItem("roleName")
+    !GlobalFunctions.decrypt("roleName")
       ? {
           key: "login",
           label: "Login",
@@ -166,8 +167,7 @@ export default function Nav() {
           <Link className="text-white hover:text-primaryVariant" to="/">
             Beranda
           </Link>
-          {localStorage
-            .getItem("roleName")
+          {GlobalFunctions.decrypt("roleName")
             ?.toLowerCase()
             .includes("admin") && (
             <Dropdown arrow placement="bottomLeft" overlay={menu}>
@@ -185,7 +185,7 @@ export default function Nav() {
           >
             Repository
           </Link>
-          {localStorage.getItem("roleName") ? (
+          {GlobalFunctions.decrypt("roleName") ? (
             <Dropdown
               arrow
               placement="bottomRight"
@@ -233,10 +233,10 @@ export default function Nav() {
             />
           </div>
           <div className="text-lg font-bold text-primary1">
-            {localStorage.getItem("name")}
+            {GlobalFunctions.decrypt("name")}
           </div>
           <div className="text-lg font-bold text-primary1">
-            {localStorage.getItem("userName")}
+            {GlobalFunctions.decrypt("username")}
           </div>
         </div>
         <Menu

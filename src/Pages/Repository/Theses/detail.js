@@ -2,6 +2,7 @@ import { ArrowLeftOutlined, FileOutlined } from "@ant-design/icons/lib/icons";
 import { Modal, notification, PageHeader, Skeleton, Spin } from "antd";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { GlobalFunctions } from "../../../GlobalFunctions";
 import { API } from "../../../Services/axios";
 
 export default function ThesesDetailPage() {
@@ -16,14 +17,8 @@ export default function ThesesDetailPage() {
     checkExpireUser();
   }, []);
 
-  const reloadPage = () => {
-    setTimeout(() => {
-      window.location.reload(false);
-    }, 500);
-  };
-
   const checkExpireUser = () => {
-    const expire = parseInt(localStorage.getItem("expire"));
+    const expire = parseInt(GlobalFunctions.decrypt("expire"));
     const currentTime = Math.round(Date.now() / 1000);
 
     if (currentTime > expire) {
@@ -33,8 +28,8 @@ export default function ThesesDetailPage() {
         content: "Harap login kembali",
         centered: true,
         maskClosable: true,
-        onCancel: () => reloadPage(),
-        onOk: () => reloadPage(),
+        onCancel: () => GlobalFunctions.reloadPage(),
+        onOk: () => GlobalFunctions.reloadPage(),
       });
     }
   };

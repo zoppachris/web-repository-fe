@@ -1,11 +1,12 @@
 import { Button, notification, Table } from "antd";
 import React, { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { GlobalFunctions } from "../../../GlobalFunctions";
 import { API } from "../../../Services/axios";
 
 export default function RepositoryUserPage() {
   const navigate = useNavigate();
-
+  const thesesId = GlobalFunctions.decrypt("thesesId");
   const { state } = useLocation();
   const [loadingTable, setLoadingTable] = useState(false);
   const [dataTheses, setDataTheses] = useState([]);
@@ -14,7 +15,7 @@ export default function RepositoryUserPage() {
     page: 0,
     sort: "",
     search: state || "",
-    id: localStorage.getItem("thesesId") || "",
+    id: thesesId || "",
     jurusan: "",
     year: "",
   };
@@ -42,7 +43,9 @@ export default function RepositoryUserPage() {
   };
 
   useEffect(() => {
-    getTheses();
+    if (thesesId) {
+      getTheses();
+    }
   }, []);
 
   const handleDetail = (value) => {
@@ -67,7 +70,7 @@ export default function RepositoryUserPage() {
       key: "students.majors.majorName",
       width: 150,
       ellipsis: true,
-      render: (text) => text.majors?.majorName,
+      render: (text) => text?.majors?.majorName,
     },
     {
       title: "Kata Kunci",
@@ -104,7 +107,7 @@ export default function RepositoryUserPage() {
 
   return (
     <div className="flex flex-col items-center">
-      {localStorage.getItem("thesesId") === "" && (
+      {GlobalFunctions.decrypt("thesesId") === "" && (
         <div className="flex flex-row justify-end items-center w-full mt-6">
           <Button
             type="primary"

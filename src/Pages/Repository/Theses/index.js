@@ -11,6 +11,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import moment from "moment";
 import { API } from "../../../Services/axios";
+import { GlobalFunctions } from "../../../GlobalFunctions";
 
 export default function ThesesPage() {
   const navigate = useNavigate();
@@ -271,7 +272,7 @@ export default function ThesesPage() {
           Reset Filter
         </div>
       </div>
-      {localStorage.getItem("roleName")?.toLowerCase().includes("admin") && (
+      {GlobalFunctions.decrypt("roleName")?.toLowerCase().includes("admin") && (
         <div className="flex flex-row justify-end items-center w-full mt-6">
           <Button
             type="primary"
@@ -287,7 +288,7 @@ export default function ThesesPage() {
       )}
       <div
         className={
-          localStorage.getItem("roleName")?.toLowerCase().includes("admin")
+          GlobalFunctions.decrypt("roleName")?.toLowerCase().includes("admin")
             ? "mt-6 w-full"
             : "md:mt-20 mt-10 w-full"
         }
@@ -297,7 +298,7 @@ export default function ThesesPage() {
           loading={loadingTable}
           dataSource={dataTheses}
           columns={
-            localStorage.getItem("roleName")?.toLowerCase().includes("admin")
+            GlobalFunctions.decrypt("roleName")?.toLowerCase().includes("admin")
               ? columnsAdmin
               : columns
           }
@@ -306,8 +307,7 @@ export default function ThesesPage() {
             return {
               onClick: (event) => {
                 if (
-                  !localStorage
-                    .getItem("roleName")
+                  !GlobalFunctions.decrypt("roleName")
                     ?.toLowerCase()
                     .includes("admin")
                 ) {

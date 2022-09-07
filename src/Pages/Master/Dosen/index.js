@@ -88,6 +88,12 @@ export default function DosenPage() {
       key: "lectureName",
     },
     {
+      title: "Nama Fakultas",
+      dataIndex: "faculties",
+      key: "faculties.facultyName",
+      render: (text) => text.facultyName,
+    },
+    {
       title: "Status",
       dataIndex: "users",
       key: "users.status",

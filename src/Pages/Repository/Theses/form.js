@@ -10,6 +10,7 @@ import {
   Divider,
   Form,
   Input,
+  Modal,
   notification,
   PageHeader,
   Row,
@@ -22,6 +23,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import moment from "moment";
 import _debounce from "lodash.debounce";
 import apiClient, { API } from "../../../Services/axios";
+import { GlobalFunctions } from "../../../GlobalFunctions";
 
 export default function ThesesFormPage() {
   const navigate = useNavigate();
@@ -51,8 +53,10 @@ export default function ThesesFormPage() {
   useEffect(() => {
     if (state?.type !== "Create" && thesesId) {
       getThesesDetail();
-    } else if (localStorage.getItem("roleName")?.toLowerCase() === "student") {
-      getStudent(localStorage.getItem("name"));
+    } else if (
+      GlobalFunctions.decrypt("roleName")?.toLowerCase() === "student"
+    ) {
+      getStudent(GlobalFunctions.decrypt("name"));
     }
   }, []);
 
@@ -137,7 +141,7 @@ export default function ThesesFormPage() {
         id: "",
         jurusan: "",
         hasTheses:
-          localStorage.getItem("roleName")?.toLowerCase() === "student"
+          GlobalFunctions.decrypt("roleName")?.toLowerCase() === "student"
             ? ""
             : false,
       },
@@ -147,7 +151,9 @@ export default function ThesesFormPage() {
         if (res.status === 200 && res.data.status === "success") {
           const { data } = res.data;
           setDataStudents(data?.content);
-          if (localStorage.getItem("roleName")?.toLowerCase() === "student") {
+          if (
+            GlobalFunctions.decrypt("roleName")?.toLowerCase() === "student"
+          ) {
             setSelectedStudent(data?.content[0]);
             const setData = () => {
               form.setFieldsValue({
@@ -221,8 +227,24 @@ export default function ThesesFormPage() {
             message: "Berhasil membuat data",
             description: "Data tugas akhir berhasil dibuat!",
           });
-          if (localStorage.getItem("roleName")?.toLowerCase() === "student") {
+          if (
+            GlobalFunctions.decrypt("roleName")?.toLowerCase() === "student"
+          ) {
             localStorage.clear();
+            Modal.info({
+              title: "Tugas akhir behasil dibuat, akun akan logout otomatis!",
+              content: "Silahkan login kembali",
+              centered: true,
+              maskClosable: true,
+              onCancel: () => {
+                GlobalFunctions.reloadPage();
+                navigate("/", { replace: true });
+              },
+              onOk: () => {
+                GlobalFunctions.reloadPage();
+                navigate("/", { replace: true });
+              },
+            });
           } else {
             navigate(-1);
           }
@@ -544,7 +566,7 @@ export default function ThesesFormPage() {
                       disabled={
                         state?.type === "Detail" ||
                         state?.type === "Update" ||
-                        localStorage.getItem("roleName")?.toLowerCase() ===
+                        GlobalFunctions.decrypt("roleName")?.toLowerCase() ===
                           "student"
                       }
                       onChange={onChangeStudent}
