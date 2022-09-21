@@ -34,11 +34,13 @@ export default function ThesesDetailPage() {
     }
   };
 
-  const downloadFile = async (fileUrl) => {
+  const downloadFile = async (fileUrl, type) => {
     setLoadingDownload(true);
     await API(`theses.downloadFile`, {
       params: {
         filename: fileUrl,
+        isPartial: type !== "full",
+        thesesId: thesesId,
       },
       responseType: "blob",
     })
@@ -52,6 +54,7 @@ export default function ThesesDetailPage() {
           document.body.appendChild(link);
           link.click();
           link.remove();
+          getThesesDetail();
         }
       })
       .catch((res) => {
@@ -90,14 +93,6 @@ export default function ThesesDetailPage() {
           description: "Data detail dosen gagal didapatkan!",
         });
       });
-  };
-
-  const openUrl = () => {
-    downloadFile(
-      detailTheses?.fullDocumentUrl
-        ? detailTheses?.fullDocumentUrl
-        : detailTheses?.partialDocumentUrl
-    );
   };
 
   return (
@@ -153,7 +148,56 @@ export default function ThesesDetailPage() {
           </div>
           <div className="mt-4 gap-4 flex flex-col">
             <div className="text-primary1 font-semibold text-xl">
-              Download File
+              Download File Skripsi Sebagian
+            </div>
+            <div className="text-2xl text-primary1">
+              {loadingDownload ? (
+                <Spin size="small" />
+              ) : (
+                <FileOutlined
+                  onClick={() =>
+                    downloadFile(detailTheses?.partialDocumentUrl, "partial")
+                  }
+                />
+              )}
+            </div>
+            <div className="text-lg">
+              Total Download : {detailTheses?.partialTotalDownload}
+            </div>
+          </div>
+          <div className="mt-4 gap-4 flex flex-col">
+            <div className="text-primary1 font-semibold text-xl">
+              Download File Skripsi Full
+            </div>
+            <div className="text-2xl text-primary1">
+              {loadingDownload ? (
+                <Spin size="small" />
+              ) : (
+                <>
+                  <FileOutlined
+                    onClick={() =>
+                      detailTheses?.fullDocumentUrl !== "" &&
+                      downloadFile(detailTheses?.fullDocumentUrl, "full")
+                    }
+                  />
+                  {detailTheses?.fullDocumentUrl === "" && (
+                    <div className="text-sm text-red-500">
+                      Silahkan login untuk dapat melakukan download ke file ini.
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+            <div className="text-lg">
+              Total Download : {detailTheses?.fullTotalDownload}
+            </div>
+          </div>
+          {/* <div className="mt-4 gap-4 flex flex-col">
+            <div className="text-primary1 font-semibold text-xl">
+              Download File{" "}
+              {detailTheses?.fullDocumentUrl
+                ? "Skripsi Full"
+                : "Skripsi Sebagian"}
             </div>
             <div className="text-2xl text-primary1">
               {loadingDownload ? (
@@ -162,7 +206,13 @@ export default function ThesesDetailPage() {
                 <FileOutlined onClick={openUrl} className="cursor-pointer" />
               )}
             </div>
-          </div>
+            <div className="text-lg">
+              Total Download :{" "}
+              {detailTheses?.fullDocumentUrl
+                ? detailTheses?.fullTotalDownload
+                : detailTheses?.partialTotalDownload}
+            </div>
+          </div> */}
         </div>
       )}
     </div>

@@ -1,10 +1,11 @@
-import { notification, Popconfirm, Table } from "antd";
+import { notification, Popconfirm, Select, Table } from "antd";
 import Search from "antd/lib/input/Search";
 import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API } from "../../../Services/axios";
 
 export default function DosenPage() {
+  const { Option } = Select;
   const navigate = useNavigate();
   const initialParams = {
     size: 20,
@@ -15,9 +16,34 @@ export default function DosenPage() {
     fakultas: "",
   };
   const [dataLectures, setDataLectures] = useState([]);
+  const [dataFaculties, setDataFaculties] = useState([]);
   const [loadingTable, setLoadingTable] = useState(false);
   const [params, setParams] = useState(initialParams);
   const [meta, setMeta] = useState({ size: 20, page: 1, total: 0 });
+
+  const getFaculty = async () => {
+    await API(`faculty.getFaculty`, {
+      params: {
+        size: 999999,
+        page: 0,
+        sort: "",
+        search: "",
+        id: "",
+      },
+    })
+      .then((res) => {
+        if (res.status === 200 && res.data.status === "success") {
+          const { data } = res.data;
+          setDataFaculties(data?.content);
+        }
+      })
+      .catch((res) => {
+        notification.info({
+          message: "Gagal mendapatkan data",
+          description: "Data fakultas gagal didapatkan!",
+        });
+      });
+  };
 
   const getLecture = useCallback(async () => {
     setLoadingTable(true);
@@ -71,6 +97,10 @@ export default function DosenPage() {
         });
       });
   };
+
+  useEffect(() => {
+    getFaculty();
+  }, []);
 
   useEffect(() => {
     getLecture();
@@ -153,7 +183,7 @@ export default function DosenPage() {
   return (
     <div className="flex flex-col items-center">
       <div className="flex flex-col md:flex-row w-full md:justify-between justify-center gap-5">
-        <div className="md:w-10/12">
+        <div className="md:w-1/2">
           <Search
             placeholder="Cari Nama Dosen atau NIDN"
             allowClear
@@ -161,9 +191,24 @@ export default function DosenPage() {
             onSearch={onSearch}
           />
         </div>
+        <div className="md:w-2/12">
+          <Select
+            placeholder="Pilih Fakultas"
+            className="w-full"
+            allowClear
+            style={{ alignItems: "center" }}
+            onChange={(value) =>
+              setParams({ ...params, page: 0, fakultas: value || "" })
+            }
+          >
+            {dataFaculties?.map((item) => (
+              <Option key={item.facultyName}>{item.facultyName}</Option>
+            ))}
+          </Select>
+        </div>
         <div>
           <div
-            className="w-full md:w-32 text-white bg-primary2 h-8 items-center justify-center flex cursor-pointer hover:opacity-90 px-4 rounded-sm"
+            className="w-full text-white bg-primary2 h-8 items-center justify-center flex cursor-pointer hover:opacity-90 px-4 rounded-sm"
             onClick={() =>
               navigate(`/dosen-form`, {
                 state: { type: "Create" },

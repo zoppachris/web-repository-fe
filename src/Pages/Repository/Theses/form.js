@@ -349,10 +349,8 @@ export default function ThesesFormPage() {
 
   const onFinish = async (values) => {
     if (
-      thesesPartialUrl !== "" ||
-      fileBase64 !== null ||
-      thesesFullUrl !== "" ||
-      fileFullBase64 !== null
+      (thesesPartialUrl !== "" || fileBase64 !== null) &&
+      (thesesFullUrl !== "" || fileFullBase64 !== null)
     ) {
       let newUrl = thesesPartialUrl;
       let newFullUrl = thesesFullUrl;
@@ -390,41 +388,54 @@ export default function ThesesFormPage() {
         updateTheses(newValues);
       }
     } else {
-      setValidationSkripsi({
-        help: "Harap upload dokumen",
-        status: "error",
-      });
-      setValidationSkripsiFull({
-        help: "Harap upload dokumen",
-        status: "error",
-      });
+      setLoadingForm(false);
+      if (fileBase64 === null) {
+        setValidationSkripsi({
+          help: "Harap upload dokumen",
+          status: "error",
+        });
+      }
+      if (fileFullBase64 === null) {
+        setValidationSkripsiFull({
+          help: "Harap upload dokumen",
+          status: "error",
+        });
+      }
     }
   };
 
-  const onFinishFailed = (value) => {
+  const onFinishFailed = () => {
     if (
       thesesPartialUrl === "" &&
       fileBase64 === null &&
       thesesFullUrl === "" &&
       fileFullBase64 === null
     ) {
-      setValidationSkripsi({
-        help: "Harap upload dokumen",
-        status: "error",
-      });
-      setValidationSkripsiFull({
-        help: "Harap upload dokumen",
-        status: "error",
-      });
+      if (fileBase64 === null) {
+        setValidationSkripsi({
+          help: "Harap upload dokumen",
+          status: "error",
+        });
+      }
+      if (fileFullBase64 === null) {
+        setValidationSkripsiFull({
+          help: "Harap upload dokumen",
+          status: "error",
+        });
+      }
     } else {
-      setValidationSkripsi({
-        help: "",
-        status: "success",
-      });
-      setValidationSkripsiFull({
-        help: "",
-        status: "success",
-      });
+      if (fileBase64 !== null) {
+        setValidationSkripsi({
+          help: "",
+          status: "success",
+        });
+      }
+      if (fileFullBase64 !== null) {
+        setValidationSkripsiFull({
+          help: "",
+          status: "success",
+        });
+      }
     }
   };
 
